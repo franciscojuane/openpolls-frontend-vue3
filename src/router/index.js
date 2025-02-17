@@ -1,6 +1,5 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import HomeView from "../views/HomeView.vue";
 
 Vue.use(VueRouter);
 
@@ -10,17 +9,26 @@ const routes = [
     component: () => import("../layouts/MainLayout.vue"),
     children: [
       {
-        path: "/",
-        name: "HomeView",
-        component: HomeView,
+        path: "/login",
+        name: "loginView",
+        component: () => import("../views/LoginView.vue"),
+      },
+      {
+        path: "/pollList",
+        name: "pollList",
+        component: () => import("../views/polls/PollsList.vue"),
+      },
+      {
+        path: "/pollEdit",
+        name: "pollEdit",
+        component: () => import("../views/polls/PollEdit.vue"),
+      },
+      {
+        path: "/pollAdd",
+        name: "pollAdd",
+        component: () => import("../views/polls/PollAdd.vue"),
       },
     ],
-  },
-  {
-    path: "/about",
-    name: "about",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
   },
 ];
 
