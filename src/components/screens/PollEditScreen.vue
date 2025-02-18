@@ -81,70 +81,65 @@
             </v-card-title>
 
             <v-card-text>
-              <v-stepper
+              <v-pagination
                 v-model="currentQuestion"
-                v-if="showStepper"
-                :key="stepperKey"
-              >
-                <v-stepper-header center>
-                  <v-stepper-step
-                    v-for="i in effectiveQuestions.length"
-                    :key="i.key"
-                    :step="i"
-                    :editable="true"
-                  ></v-stepper-step>
-                </v-stepper-header>
-                <v-stepper-items v-if="effectiveQuestions.length > 0">
-                  <v-stepper-content
-                    v-for="i in effectiveQuestions.length"
-                    :key="i.key"
-                    :step="i"
-                  >
-                    <MultipleChoiceQuestionEditScreen
-                      v-if="
-                        effectiveQuestions[currentQuestion - 1] &&
-                        effectiveQuestions[currentQuestion - 1].questionType &&
-                        effectiveQuestions[currentQuestion - 1].questionType
-                          .name == 'MULTIPLE_CHOICE'
-                      "
-                      v-model="effectiveQuestions[currentQuestion - 1]"
-                    >
-                    </MultipleChoiceQuestionEditScreen>
-                    <NumericQuestionEditScreen
-                      v-if="
-                        effectiveQuestions[currentQuestion - 1] &&
-                        effectiveQuestions[currentQuestion - 1].questionType &&
-                        effectiveQuestions[currentQuestion - 1].questionType
-                          .name == 'NUMERIC'
-                      "
-                      v-model="effectiveQuestions[currentQuestion - 1]"
-                    >
-                    </NumericQuestionEditScreen>
-                    <ScaleQuestionEditScreen
-                      v-if="
-                        effectiveQuestions[currentQuestion - 1] &&
-                        effectiveQuestions[currentQuestion - 1].questionType &&
-                        effectiveQuestions[currentQuestion - 1].questionType
-                          .name == 'SCALE'
-                      "
-                      v-model="internalQuestions[currentQuestion - 1]"
-                    >
-                    </ScaleQuestionEditScreen>
-                    <TextQuestionEditScreen
-                      v-if="
-                        effectiveQuestions[currentQuestion - 1] &&
-                        effectiveQuestions[currentQuestion - 1].questionType &&
-                        effectiveQuestions[currentQuestion - 1].questionType
-                          .name == 'TEXT'
-                      "
-                      v-model="effectiveQuestions[currentQuestion - 1]"
-                    >
-                    </TextQuestionEditScreen>
-
-                    {{ effectiveQuestions[i - 1] }}
-                  </v-stepper-content>
-                </v-stepper-items>
-              </v-stepper>
+                :length="effectiveQuestions.length"
+                prev-icon="mdi-menu-left"
+                next-icon="mdi-menu-right"
+              ></v-pagination>
+              <v-container>
+                <v-row>
+                  <v-col cols="3"> </v-col>
+                  <v-col cols="6"
+                    ><v-card class="elevation-3 mt-2 pl-2 pr-2">
+                      <v-card-title>Question</v-card-title>
+                      <v-card-text>
+                        <MultipleChoiceQuestionEditScreen
+                          v-if="
+                            currentQuestionObject &&
+                            currentQuestionObject.questionType &&
+                            currentQuestionObject.questionType.name ==
+                              'MULTIPLE_CHOICE'
+                          "
+                          v-model="currentQuestionObject"
+                          @change="currentQuestionObject.update = true"
+                        >
+                        </MultipleChoiceQuestionEditScreen>
+                        <NumericQuestionEditScreen
+                          v-if="
+                            currentQuestionObject &&
+                            currentQuestionObject.questionType &&
+                            currentQuestionObject.questionType.name == 'NUMERIC'
+                          "
+                          v-model="currentQuestionObject"
+                          @change="currentQuestionObject.update = true"
+                        >
+                        </NumericQuestionEditScreen>
+                        <ScaleQuestionEditScreen
+                          v-if="
+                            currentQuestionObject &&
+                            currentQuestionObject.questionType &&
+                            currentQuestionObject.questionType.name == 'SCALE'
+                          "
+                          v-model="currentQuestionObject"
+                          @change="currentQuestionObject.update = true"
+                        >
+                        </ScaleQuestionEditScreen>
+                        <TextQuestionEditScreen
+                          v-if="
+                            currentQuestionObject &&
+                            currentQuestionObject.questionType &&
+                            currentQuestionObject.questionType.name == 'TEXT'
+                          "
+                          v-model="currentQuestionObject"
+                          @change="currentQuestionObject.update = true"
+                        >
+                        </TextQuestionEditScreen>
+                      </v-card-text> </v-card
+                  ></v-col>
+                  <v-col cols="3"> </v-col>
+                </v-row>
+              </v-container>
             </v-card-text>
           </v-card>
         </v-container>
@@ -189,7 +184,6 @@ export default {
     TextQuestionEditScreen,
   },
   data: () => ({
-    last: 0,
     informationFormValid: false,
     internalPoll: {
       name: null,
@@ -198,6 +192,7 @@ export default {
       expirationDate: null,
     },
     internalQuestions: [],
+    effectiveQuestions: [],
     currentQuestion: 1,
     defaultQuestions: {
       multipleChoice: {
@@ -266,6 +261,14 @@ export default {
         }
       },
     },
+    internalQuestions: {
+      deep: true,
+      handler() {
+        this.effectiveQuestions = this.internalQuestions.filter(
+          (elem) => !elem.delete
+        );
+      },
+    },
     fullObject: {
       deep: true,
       handler(v) {
@@ -284,22 +287,12 @@ export default {
     isExistingPoll() {
       return this.internalPoll && this.internalPoll.id;
     },
-    effectiveQuestions() {
-      let x = this.internalQuestions;
-      for (let i of x) {
-        i.key = Math.random();
-        console.log(i.delete);
-      }
-      return this.internalQuestions.filter((elem) => !elem.delete);
+    currentQuestionObject() {
+      return this.effectiveQuestions[this.currentQuestion - 1];
     },
   },
 
   methods: {
-    lastCreated() {
-      let x = Math.random(500);
-      console.log(x);
-      return x;
-    },
     addQuestion(type) {
       this.internalQuestions.push(
         JSON.parse(JSON.stringify(this.defaultQuestions[type]))

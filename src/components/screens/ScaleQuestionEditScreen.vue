@@ -2,7 +2,7 @@
   <v-form>
     <v-container>
       <v-row>
-        <v-col cols="6">
+        <v-col cols="12">
           <v-row cols="4">
             <v-text-field
               label="Text"
@@ -12,7 +12,7 @@
           <v-row
             ><v-text-field
               label="Subtext"
-              v-model="internalQuestion.subtext"
+              v-model="internalQuestion.subText"
             ></v-text-field
           ></v-row>
           <v-row>
@@ -73,6 +73,7 @@ export default {
       deep: true,
       handler(v) {
         this.$emit("value", v);
+        this.$emit("change");
       },
     },
   },

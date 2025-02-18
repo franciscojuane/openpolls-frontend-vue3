@@ -15,6 +15,9 @@
             </v-toolbar>
           </v-card-title>
           <v-card-text>
+            <v-alert :type="alertType" v-model="showAlert">{{
+              alertMessage
+            }}</v-alert>
             <PollEditScreen
               @valid="valid = $event"
               v-model="item"
@@ -37,6 +40,9 @@ export default {
   data: () => ({
     item: null,
     valid: false,
+    showAlert: false,
+    alertType: "warning",
+    alertMessage: "",
   }),
   mounted() {
     this.load();
@@ -50,6 +56,15 @@ export default {
           .then(({ data }) => {
             this.item.questions = data;
             console.log(this.item);
+          })
+          .catch((error) => {
+            this.showAlert = true;
+            this.alertType = "warning";
+            this.alertMessage = "Error happened while loading data.";
+            console.log(error);
+            setTimeout(() => {
+              this.showAlert = false;
+            }, 5000);
           });
       });
     },
@@ -60,34 +75,61 @@ export default {
           let pollId = data.id;
           let promises = [];
           this.item.poll = data;
-          let newQuestions = [];
+
           for (let questionNumber in this.item.questions) {
             let question = this.item.questions[questionNumber];
             question.rank = questionNumber;
+
             if (question.id) {
-              promises.push(
-                this.$api
-                  .patch(
+              if (question.delete) {
+                promises.push(
+                  this.$api.delete(
                     "/polls/" + pollId + "/questions/" + question.id,
                     question
                   )
-                  .then(({ data }) => {
-                    console.log(data);
-                    newQuestions.push(data);
-                  })
-              );
+                );
+              } else if (question.update) {
+                promises.push(
+                  this.$api.patch(
+                    "/polls/" + pollId + "/questions/" + question.id,
+                    question
+                  )
+                );
+              }
             } else {
               promises.push(
-                this.$api
-                  .post("/polls/" + pollId + "/questions", question)
-                  .then(({ data }) => {
-                    console.log(data);
-                    newQuestions.push(data);
-                  })
+                this.$api.post("/polls/" + pollId + "/questions", question)
               );
             }
           }
-          Promise.all(promises).then(() => {});
+          Promise.all(promises)
+            .then(() => {
+              this.load();
+              this.showAlert = true;
+              this.alertType = "success";
+              this.alertMessage = "Changes saved successfully.";
+              setTimeout(() => {
+                this.showAlert = false;
+              }, 5000);
+            })
+            .catch((error) => {
+              this.showAlert = true;
+              this.alertType = "warning";
+              this.alertMessage = "Error happened while saving data.";
+              console.log(error);
+              setTimeout(() => {
+                this.showAlert = false;
+              }, 5000);
+            });
+        })
+        .catch((error) => {
+          this.showAlert = true;
+          this.alertType = "warning";
+          this.alertMessage = "Error happened while saving data.";
+          console.log(error);
+          setTimeout(() => {
+            this.showAlert = false;
+          }, 5000);
         });
     },
   },

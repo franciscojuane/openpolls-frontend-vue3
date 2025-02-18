@@ -12,7 +12,7 @@
           <v-row
             ><v-text-field
               label="Subtext"
-              v-model="internalQuestion.subtext"
+              v-model="internalQuestion.subText"
             ></v-text-field
           ></v-row>
           <v-row>
@@ -100,6 +100,7 @@ export default {
       deep: true,
       handler(v) {
         this.$emit("value", v);
+        this.$emit("change");
       },
     },
   },
