@@ -19,7 +19,7 @@ const routes = [
         component: () => import("../views/polls/PollsList.vue"),
       },
       {
-        path: "/pollEdit",
+        path: "/pollEdit/:id",
         name: "pollEdit",
         component: () => import("../views/polls/PollEdit.vue"),
       },

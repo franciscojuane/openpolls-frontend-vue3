@@ -23,6 +23,12 @@
                   </v-tooltip>
                 </v-toolbar>
               </template>
+              <template v-slot:[`item.name`]="{ item }">
+                <router-link
+                  :to="{ name: 'pollEdit', params: { id: item.id } }"
+                  >{{ item.name }}</router-link
+                >
+              </template>
               <template v-slot:[`item.status`]="{ item }">
                 <v-chip :color="item.effective ? 'green' : 'red'">{{
                   item.effective ? "Active" : "Inactive"
@@ -49,13 +55,13 @@
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
                       class="ml-2 mr-2"
-                      @click="item"
+                      @click="showDeleteDialog(item)"
                       v-bind="attrs"
                       v-on="on"
-                      >mdi-eye</v-icon
+                      >mdi-delete</v-icon
                     >
                   </template>
-                  View Results
+                  Delete
                 </v-tooltip>
               </template>
             </v-data-table>
@@ -63,6 +69,27 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-dialog v-model="showDeleteDialogFlag" max-width="500">
+      <v-card>
+        <v-card-title>Confirm Deletion</v-card-title>
+        <v-card-text>Are you sure you want to delete? </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            class="secondary"
+            @click="
+              deleteSelectedItem().then(() => {
+                showDeleteDialogFlag = false;
+                loadData();
+              })
+            "
+            >Accept</v-btn
+          ><v-btn class="secondary" @click="showDeleteDialogFlag = false"
+            >Cancel</v-btn
+          ></v-card-actions
+        >
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -70,6 +97,8 @@
 export default {
   data: () => ({
     items: [],
+    showDeleteDialogFlag: false,
+    itemSelectedForDeletion: null,
     headers: [
       { value: "name", text: "Poll Name", sortable: false },
       { value: "description", text: "Poll Description", sortable: false },
@@ -87,9 +116,21 @@ export default {
     ],
   }),
   mounted() {
-    this.$api.get("/polls").then(({ data }) => {
-      this.items = data.content;
-    });
+    this.loadData();
+  },
+  methods: {
+    loadData() {
+      return this.$api.get("/polls").then(({ data }) => {
+        this.items = data.content;
+      });
+    },
+    showDeleteDialog(item) {
+      this.showDeleteDialogFlag = true;
+      this.itemSelectedForDeletion = item;
+    },
+    deleteSelectedItem() {
+      return this.$api.delete("/polls/" + this.itemSelectedForDeletion.id);
+    },
   },
 };
 </script>

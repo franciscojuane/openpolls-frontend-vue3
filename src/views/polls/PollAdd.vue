@@ -7,10 +7,8 @@
             <v-toolbar flat color="white">
               <v-toolbar-title>Add new Poll</v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn class="secondary"
-                ><v-icon @click="save" :disabled="!valid"
-                  >mdi-content-save</v-icon
-                ></v-btn
+              <v-btn @click="save" :disabled="!valid" class="secondary"
+                ><v-icon>mdi-content-save</v-icon></v-btn
               >
             </v-toolbar>
           </v-card-title>
@@ -29,7 +27,7 @@
 <script>
 import PollEditScreen from "@/components/screens/PollEditScreen";
 export default {
-  name: "PollEdit",
+  name: "PollAdd",
   components: {
     PollEditScreen,
   },
@@ -37,26 +35,43 @@ export default {
   data: () => ({
     item: null,
     valid: false,
-    headers: [
-      { value: "name", text: "Poll Name", sortable: false },
-      { value: "description", text: "Poll Description", sortable: false },
-      {
-        value: "status",
-        text: "Status",
-        sortable: false,
-        align: "center",
-      },
-      { value: "actions", text: "Actions", align: "right", sortable: false },
-    ],
   }),
-  mounted() {
-    this.$api.get("/polls").then(({ data }) => {
-      this.items = data.content;
-    });
-  },
+  mounted() {},
   methods: {
     save() {
-      this.$api.post("/polls", this.item);
+      this.$api.post("/polls", this.item.poll).then(({ data }) => {
+        let pollId = data.id;
+        let promises = [];
+        this.item.poll = data;
+        let newQuestions = [];
+        for (let questionNumber in this.item.questions) {
+          let question = this.item.questions[questionNumber];
+          question.rank = questionNumber;
+          if (question.id) {
+            promises.push(
+              this.$api
+                .patch(
+                  "/polls/" + pollId + "/questions/" + question.id,
+                  question
+                )
+                .then(({ data }) => {
+                  console.log(data);
+                  newQuestions.push(data);
+                })
+            );
+          } else {
+            promises.push(
+              this.$api
+                .post("/polls/" + pollId + "/questions", question)
+                .then(({ data }) => {
+                  console.log(data);
+                  newQuestions.push(data);
+                })
+            );
+          }
+        }
+        Promise.all(promises).then(() => {});
+      });
     },
   },
 };

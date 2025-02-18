@@ -3,6 +3,7 @@
     <v-tabs v-model="tabs">
       <v-tab>Information</v-tab>
       <v-tab>Questions</v-tab>
+      <v-tab v-if="isExistingPoll">Results</v-tab>
 
       <v-tab-item>
         <v-card-text>
@@ -51,7 +52,9 @@
                 <v-spacer></v-spacer>
                 <v-btn
                   :disabled="internalQuestions.length == 1"
-                  @click="deleteCurrentQuestion()"
+                  @click="
+                    showDeleteDialog(effectiveQuestions[currentQuestion - 1])
+                  "
                   class="secondary mr-2"
                   ><v-icon>mdi-delete</v-icon></v-btn
                 >
@@ -78,46 +81,50 @@
             </v-card-title>
 
             <v-card-text>
-              <v-stepper v-model="currentQuestion">
+              <v-stepper
+                v-model="currentQuestion"
+                v-if="showStepper"
+                :key="stepperKey"
+              >
                 <v-stepper-header center>
                   <v-stepper-step
-                    v-for="i in internalQuestions.length"
-                    :key="i"
+                    v-for="i in effectiveQuestions.length"
+                    :key="i.key"
                     :step="i"
                     :editable="true"
                   ></v-stepper-step>
                 </v-stepper-header>
-                <v-stepper-items v-if="internalQuestions.length > 0">
+                <v-stepper-items v-if="effectiveQuestions.length > 0">
                   <v-stepper-content
-                    v-for="i in internalQuestions.length"
-                    :key="i"
+                    v-for="i in effectiveQuestions.length"
+                    :key="i.key"
                     :step="i"
                   >
                     <MultipleChoiceQuestionEditScreen
                       v-if="
-                        internalQuestions[currentQuestion - 1] &&
-                        internalQuestions[currentQuestion - 1].questionType &&
-                        internalQuestions[currentQuestion - 1].questionType
+                        effectiveQuestions[currentQuestion - 1] &&
+                        effectiveQuestions[currentQuestion - 1].questionType &&
+                        effectiveQuestions[currentQuestion - 1].questionType
                           .name == 'MULTIPLE_CHOICE'
                       "
-                      v-model="internalQuestions[currentQuestion - 1]"
+                      v-model="effectiveQuestions[currentQuestion - 1]"
                     >
                     </MultipleChoiceQuestionEditScreen>
                     <NumericQuestionEditScreen
                       v-if="
-                        internalQuestions[currentQuestion - 1] &&
-                        internalQuestions[currentQuestion - 1].questionType &&
-                        internalQuestions[currentQuestion - 1].questionType
+                        effectiveQuestions[currentQuestion - 1] &&
+                        effectiveQuestions[currentQuestion - 1].questionType &&
+                        effectiveQuestions[currentQuestion - 1].questionType
                           .name == 'NUMERIC'
                       "
-                      v-model="internalQuestions[currentQuestion - 1]"
+                      v-model="effectiveQuestions[currentQuestion - 1]"
                     >
                     </NumericQuestionEditScreen>
                     <ScaleQuestionEditScreen
                       v-if="
-                        internalQuestions[currentQuestion - 1] &&
-                        internalQuestions[currentQuestion - 1].questionType &&
-                        internalQuestions[currentQuestion - 1].questionType
+                        effectiveQuestions[currentQuestion - 1] &&
+                        effectiveQuestions[currentQuestion - 1].questionType &&
+                        effectiveQuestions[currentQuestion - 1].questionType
                           .name == 'SCALE'
                       "
                       v-model="internalQuestions[currentQuestion - 1]"
@@ -125,16 +132,16 @@
                     </ScaleQuestionEditScreen>
                     <TextQuestionEditScreen
                       v-if="
-                        internalQuestions[currentQuestion - 1] &&
-                        internalQuestions[currentQuestion - 1].questionType &&
-                        internalQuestions[currentQuestion - 1].questionType
+                        effectiveQuestions[currentQuestion - 1] &&
+                        effectiveQuestions[currentQuestion - 1].questionType &&
+                        effectiveQuestions[currentQuestion - 1].questionType
                           .name == 'TEXT'
                       "
-                      v-model="internalQuestions[currentQuestion - 1]"
+                      v-model="effectiveQuestions[currentQuestion - 1]"
                     >
                     </TextQuestionEditScreen>
 
-                    {{ internalQuestions[i - 1] }}
+                    {{ effectiveQuestions[i - 1] }}
                   </v-stepper-content>
                 </v-stepper-items>
               </v-stepper>
@@ -142,7 +149,27 @@
           </v-card>
         </v-container>
       </v-tab-item>
+      <v-tab-item> </v-tab-item>
     </v-tabs>
+    <v-dialog v-model="showDeleteDialogFlag" max-width="500">
+      <v-card>
+        <v-card-title>Confirm Deletion</v-card-title>
+        <v-card-text>Are you sure you want to delete? </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            class="secondary"
+            @click="
+              deleteSelectedItem();
+              showDeleteDialogFlag = false;
+            "
+            >Accept</v-btn
+          ><v-btn class="secondary" @click="showDeleteDialogFlag = false"
+            >Cancel</v-btn
+          ></v-card-actions
+        >
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 <script>
@@ -162,6 +189,7 @@ export default {
     TextQuestionEditScreen,
   },
   data: () => ({
+    last: 0,
     informationFormValid: false,
     internalPoll: {
       name: null,
@@ -203,10 +231,14 @@ export default {
         maxLength: 255,
       },
     },
-    tabs: 1,
+    tabs: 0,
+    showDeleteDialogFlag: false,
+    itemSelectedForDeletion: null,
+    showStepper: true,
+    stepperKey: 0,
   }),
   props: {
-    poll: {
+    value: {
       type: Object,
     },
   },
@@ -214,15 +246,15 @@ export default {
     informationFormValid: {
       immediate: true,
       handler(v) {
-        console.log("valid " + v);
         this.$emit("valid", v);
       },
     },
-    item: {
+    value: {
       deep: true,
-      handler() {
-        if (this.item) {
-          this.internalPoll = this.item;
+      handler(v) {
+        if (v) {
+          this.internalPoll = v.poll;
+          this.internalQuestions = v.questions;
         } else {
           this.internalPoll = {
             name: null,
@@ -230,10 +262,11 @@ export default {
             effectiveDate: null,
             expirationDate: null,
           };
+          this.internalQuestions = [];
         }
       },
     },
-    internalPoll: {
+    fullObject: {
       deep: true,
       handler(v) {
         this.$emit("input", v);
@@ -241,7 +274,32 @@ export default {
     },
   },
 
+  computed: {
+    fullObject() {
+      return {
+        poll: this.internalPoll,
+        questions: this.internalQuestions,
+      };
+    },
+    isExistingPoll() {
+      return this.internalPoll && this.internalPoll.id;
+    },
+    effectiveQuestions() {
+      let x = this.internalQuestions;
+      for (let i of x) {
+        i.key = Math.random();
+        console.log(i.delete);
+      }
+      return this.internalQuestions.filter((elem) => !elem.delete);
+    },
+  },
+
   methods: {
+    lastCreated() {
+      let x = Math.random(500);
+      console.log(x);
+      return x;
+    },
     addQuestion(type) {
       this.internalQuestions.push(
         JSON.parse(JSON.stringify(this.defaultQuestions[type]))
@@ -253,6 +311,30 @@ export default {
     deleteCurrentQuestion() {
       this.internalQuestions.splice(this.currentQuestion - 1, 1);
       this.currentQuestion--;
+    },
+    showDeleteDialog(item) {
+      console.log(this.effectiveQuestions[this.currentQuestion - 1]);
+      console.log(this.currentQuestion);
+      console.log(this.effectiveQuestions);
+      console.log(item);
+      this.showDeleteDialogFlag = true;
+      this.itemSelectedForDeletion = item;
+    },
+    deleteSelectedItem() {
+      let x = this.currentQuestion;
+      this.currentQuestion = 0;
+      this.showStepper = false;
+      this.$nextTick(() => {
+        this.$set(this.itemSelectedForDeletion, "delete", true);
+        this.currentQuestion = x;
+        this.showStepper = true;
+        this.updateStepperRendering();
+      });
+    },
+    updateStepperRendering() {
+      this.$nextTick(() => {
+        this.stepperKey++;
+      });
     },
   },
   created() {

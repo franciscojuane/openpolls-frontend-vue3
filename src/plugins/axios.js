@@ -20,6 +20,16 @@ const ApiService = {
     return api.post(resource, payload, config);
   },
 
+  patch(resource, payload, config) {
+    this.setHeaders();
+    return api.patch(resource, payload, config);
+  },
+
+  delete(resource) {
+    this.setHeaders();
+    return api.delete(resource);
+  },
+
   setHeaders() {
     if (window.localStorage.getItem("token")) {
       api.defaults.headers.common["Authorization"] =
