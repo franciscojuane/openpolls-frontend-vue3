@@ -144,7 +144,13 @@
           </v-card>
         </v-container>
       </v-tab-item>
-      <v-tab-item> </v-tab-item>
+      <v-tab-item
+        ><PollResultsScreen
+          v-if="isExistingPoll && internalPoll"
+          :pollId="internalPoll.id"
+        >
+        </PollResultsScreen
+      ></v-tab-item>
     </v-tabs>
     <v-dialog v-model="showDeleteDialogFlag" max-width="500">
       <v-card>
@@ -169,10 +175,11 @@
 </template>
 <script>
 import DateTimePickerField from "@/components/fields/DateTimePickerField";
-import MultipleChoiceQuestionEditScreen from "@/components/screens/MultipleChoiceQuestionEditScreen";
-import NumericQuestionEditScreen from "@/components/screens/NumericQuestionEditScreen";
-import ScaleQuestionEditScreen from "@/components/screens/ScaleQuestionEditScreen";
-import TextQuestionEditScreen from "@/components/screens/TextQuestionEditScreen";
+import MultipleChoiceQuestionEditScreen from "@/components/screens/questions/edit/MultipleChoiceQuestionEditScreen";
+import NumericQuestionEditScreen from "@/components/screens/questions/edit/NumericQuestionEditScreen";
+import ScaleQuestionEditScreen from "@/components/screens/questions/edit/ScaleQuestionEditScreen";
+import TextQuestionEditScreen from "@/components/screens/questions/edit/TextQuestionEditScreen";
+import PollResultsScreen from "@/components/screens/PollResultsScreen";
 
 export default {
   name: "PollEditScreen",
@@ -182,6 +189,7 @@ export default {
     NumericQuestionEditScreen,
     ScaleQuestionEditScreen,
     TextQuestionEditScreen,
+    PollResultsScreen,
   },
   data: () => ({
     informationFormValid: false,
@@ -227,6 +235,7 @@ export default {
       },
     },
     tabs: 0,
+    resultsTabs: 0,
     showDeleteDialogFlag: false,
     itemSelectedForDeletion: null,
     showStepper: true,
@@ -306,28 +315,11 @@ export default {
       this.currentQuestion--;
     },
     showDeleteDialog(item) {
-      console.log(this.effectiveQuestions[this.currentQuestion - 1]);
-      console.log(this.currentQuestion);
-      console.log(this.effectiveQuestions);
-      console.log(item);
       this.showDeleteDialogFlag = true;
       this.itemSelectedForDeletion = item;
     },
     deleteSelectedItem() {
-      let x = this.currentQuestion;
-      this.currentQuestion = 0;
-      this.showStepper = false;
-      this.$nextTick(() => {
-        this.$set(this.itemSelectedForDeletion, "delete", true);
-        this.currentQuestion = x;
-        this.showStepper = true;
-        this.updateStepperRendering();
-      });
-    },
-    updateStepperRendering() {
-      this.$nextTick(() => {
-        this.stepperKey++;
-      });
+      this.$set(this.itemSelectedForDeletion, "delete", true);
     },
   },
   created() {
