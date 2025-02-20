@@ -3,7 +3,6 @@
     <v-tabs v-model="tabs">
       <v-tab>Information</v-tab>
       <v-tab>Questions</v-tab>
-      <v-tab v-if="isExistingPoll">Results</v-tab>
 
       <v-tab-item>
         <v-card-text>
@@ -144,21 +143,6 @@
           </v-card>
         </v-container>
       </v-tab-item>
-      <v-tab-item>
-        <v-pagination
-          v-model="currentQuestionResults"
-          :length="effectiveQuestions.length"
-          prev-icon="mdi-menu-left"
-          next-icon="mdi-menu-right"
-        ></v-pagination>
-
-        <PollResultsScreen
-          v-if="isExistingPoll && internalPoll"
-          :pollId="internalPoll.id"
-          :question="effectiveQuestions[currentQuestionResults - 1]"
-        >
-        </PollResultsScreen
-      ></v-tab-item>
     </v-tabs>
     <v-dialog v-model="showDeleteDialogFlag" max-width="500">
       <v-card>
@@ -187,7 +171,6 @@ import MultipleChoiceQuestionEditScreen from "@/components/screens/questions/edi
 import NumericQuestionEditScreen from "@/components/screens/questions/edit/NumericQuestionEditScreen";
 import ScaleQuestionEditScreen from "@/components/screens/questions/edit/ScaleQuestionEditScreen";
 import TextQuestionEditScreen from "@/components/screens/questions/edit/TextQuestionEditScreen";
-import PollResultsScreen from "@/components/screens/PollResultsScreen";
 
 export default {
   name: "PollEditScreen",
@@ -197,7 +180,6 @@ export default {
     NumericQuestionEditScreen,
     ScaleQuestionEditScreen,
     TextQuestionEditScreen,
-    PollResultsScreen,
   },
   data: () => ({
     informationFormValid: false,

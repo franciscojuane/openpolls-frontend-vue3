@@ -54,6 +54,22 @@
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
+                      @click="
+                        $router.push({
+                          name: 'pollResults',
+                          params: { id: item.id },
+                        })
+                      "
+                      v-bind="attrs"
+                      v-on="on"
+                      >mdi-eye</v-icon
+                    >
+                  </template>
+                  Edit
+                </v-tooltip>
+                <v-tooltip top>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon
                       class="ml-2 mr-2"
                       @click="showDeleteDialog(item)"
                       v-bind="attrs"

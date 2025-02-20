@@ -24,6 +24,11 @@ const routes = [
         component: () => import("../views/polls/PollEdit.vue"),
       },
       {
+        path: "/pollResults/:id",
+        name: "pollResults",
+        component: () => import("../views/polls/PollResults.vue"),
+      },
+      {
         path: "/pollAdd",
         name: "pollAdd",
         component: () => import("../views/polls/PollAdd.vue"),
