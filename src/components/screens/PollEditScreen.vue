@@ -144,10 +144,18 @@
           </v-card>
         </v-container>
       </v-tab-item>
-      <v-tab-item
-        ><PollResultsScreen
+      <v-tab-item>
+        <v-pagination
+          v-model="currentQuestionResults"
+          :length="effectiveQuestions.length"
+          prev-icon="mdi-menu-left"
+          next-icon="mdi-menu-right"
+        ></v-pagination>
+
+        <PollResultsScreen
           v-if="isExistingPoll && internalPoll"
           :pollId="internalPoll.id"
+          :question="effectiveQuestions[currentQuestionResults - 1]"
         >
         </PollResultsScreen
       ></v-tab-item>
@@ -201,6 +209,7 @@ export default {
     },
     internalQuestions: [],
     effectiveQuestions: [],
+    currentQuestionResults: 1,
     currentQuestion: 1,
     defaultQuestions: {
       multipleChoice: {
@@ -235,7 +244,7 @@ export default {
       },
     },
     tabs: 0,
-    resultsTabs: 0,
+
     showDeleteDialogFlag: false,
     itemSelectedForDeletion: null,
     showStepper: true,

@@ -4,6 +4,7 @@ import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import axios from "./plugins/axios";
+import apexCharts from "./plugins/apexCharts";
 import "@mdi/font/css/materialdesignicons.css";
 
 Vue.config.productionTip = false;
@@ -13,5 +14,6 @@ new Vue({
   store,
   vuetify,
   axios,
+  apexCharts,
   render: (h) => h(App),
 }).$mount("#app");
