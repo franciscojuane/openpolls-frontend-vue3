@@ -5,7 +5,9 @@
         <v-card class="elevation-12">
           <v-card-title>
             <v-toolbar flat color="white">
-              <v-toolbar-title>Poll Results: {{ poll.name }}</v-toolbar-title>
+              <v-toolbar-title
+                >Poll Results: {{ poll ? poll.name : "" }}</v-toolbar-title
+              >
             </v-toolbar>
           </v-card-title>
           <v-card-text>
@@ -29,8 +31,10 @@
                       height="500px"
                       width="100%"
                       v-if="
-                        question.questionType.name == 'NUMERIC' ||
-                        question.questionType.name == 'SCALE'
+                        question &&
+                        question.questionType &&
+                        (question.questionType.name == 'NUMERIC' ||
+                          question.questionType.name == 'SCALE')
                       "
                     >
                     </BarChartQuestionViewScreen>
@@ -38,18 +42,55 @@
                       height="500px"
                       width="100%"
                       :question="question"
-                      v-if="question.questionType.name == 'MULTIPLE_CHOICE'"
+                      v-if="
+                        question &&
+                        question.questionType &&
+                        question.questionType.name == 'MULTIPLE_CHOICE'
+                      "
                     ></PieChartQuestionViewScreen>
                     <TextTableQuestionViewScreen
                       :question="question"
-                      v-if="question.questionType.name == 'TEXT'"
+                      v-if="
+                        question &&
+                        question.questionType &&
+                        question.questionType.name == 'TEXT'
+                      "
                     >
                     </TextTableQuestionViewScreen>
                   </v-card-text>
                 </v-card>
               </v-tab-item>
-              <v-tab-item><v-data-table></v-data-table></v-tab-item> </v-tabs
-          ></v-card-text>
+              <v-tab-item
+                ><v-data-table
+                  :items="rawDataItems"
+                  :headers="headers"
+                  v-if="questions.length > 0"
+                >
+                  <template
+                    v-slot:[`item.question${num}`]="{ item }"
+                    v-for="num of questionsIds.length"
+                  >
+                    <td :key="num">
+                      {{
+                        item.data.find((elem) => elem.questionId == num)
+                          ? item.data.find((elem) => elem.questionId == num)
+                              .answer
+                          : ""
+                      }}
+                    </td>
+                  </template>
+                  <template v-slot:[`item.identifier`]="{ item }">
+                    <td v-if="item.ipAddress">
+                      {{ item.ipAddress }}
+                    </td>
+                    <td v-else>
+                      {{ item.emailAddress }}
+                    </td>
+                  </template>
+                </v-data-table></v-tab-item
+              >
+            </v-tabs></v-card-text
+          >
         </v-card>
       </v-col>
     </v-row>
@@ -70,8 +111,10 @@ export default {
     headers: [],
     poll: {},
     tabs: 0,
-    questions: [],
+    questions: [{}],
+    questionsIds: [],
     currentQuestion: 1,
+    rawDataItems: [],
   }),
   props: {},
 
@@ -83,57 +126,41 @@ export default {
           .get("/polls/" + this.$route.params.id + "/questions")
           .then(({ data }) => {
             this.questions = data;
+            this.headers = [{ text: "Identifier", value: "identifier" }];
+            this.questions.forEach((elem) => {
+              this.headers.push({
+                text: elem.text,
+                value: "question" + elem.id,
+              });
+            });
+            this.questionsIds = this.questions.map((elem) => elem.id);
           });
       });
+    },
+    loadRawDataItems() {
+      this.$api
+        .get("/polls/" + this.poll.id + "/submissions/table")
+        .then(({ data }) => {
+          this.rawDataItems = data.rows;
+        });
     },
   },
   computed: {
     question() {
       return this.questions[this.currentQuestion - 1];
     },
-    type() {
-      return this.question &&
-        this.question.questionType &&
-        this.question.questionType.name == "MULTIPLE_CHOICE"
-        ? "pie"
-        : "bar";
-    },
   },
   async mounted() {
     await this.load();
   },
   watch: {
-    question: {
+    tabs: {
       immediate: true,
       handler(v) {
-        this.loading = true;
-
-        if (v) {
-          if (v.questionType.name != "TEXT") {
-            this.options.xaxis.categories = v.options;
-            this.$api
-              .get(
-                "/polls/" +
-                  this.poll.id +
-                  "/submissions/answerCountByQuestion/" +
-                  v.id
-              )
-              .then(({ data }) => {
-                this.aggregatedData = data.content;
-                this.calculateOptions();
-                this.calculateSeries();
-                this.loading = false;
-              });
-          } else {
-            this.loadTextQuestionData(v);
-          }
+        console.log(v);
+        if (v == 1 && this.rawDataItems.length == 0) {
+          this.loadRawDataItems();
         }
-      },
-    },
-    paginationOptions: {
-      deep: true,
-      handler() {
-        this.loadTextQuestionData(this.question);
       },
     },
   },

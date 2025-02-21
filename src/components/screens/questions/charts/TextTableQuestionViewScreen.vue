@@ -21,7 +21,7 @@ export default {
     aggregatedData: null,
     textTableItems: [],
     paginationOptions: {
-      itemsPerPage: 1,
+      itemsPerPage: 10,
       page: 1,
     },
     totalTextItems: 0,

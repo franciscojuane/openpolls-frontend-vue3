@@ -60,17 +60,18 @@
                           params: { id: item.id },
                         })
                       "
+                      class="ml-1 mr-1"
                       v-bind="attrs"
                       v-on="on"
                       >mdi-eye</v-icon
                     >
                   </template>
-                  Edit
+                  View Results
                 </v-tooltip>
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
-                      class="ml-2 mr-2"
+                      class="ml-1 mr-1"
                       @click="showDeleteDialog(item)"
                       v-bind="attrs"
                       v-on="on"
@@ -110,6 +111,8 @@
 </template>
 
 <script>
+import moment from "moment";
+
 export default {
   data: () => ({
     items: [],
@@ -138,6 +141,14 @@ export default {
     loadData() {
       return this.$api.get("/polls").then(({ data }) => {
         this.items = data.content;
+        this.items.forEach((elem) => {
+          elem.effectiveDate = moment(elem.effectiveDate).format(
+            "MM-DD-YYYY HH:mm:ss"
+          );
+          elem.expirationDate = moment(elem.expirationDate).format(
+            "MM-DD-YYYY HH:mm:ss"
+          );
+        });
       });
     },
     showDeleteDialog(item) {
