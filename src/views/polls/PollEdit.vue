@@ -7,11 +7,30 @@
             <v-toolbar flat color="white">
               <v-toolbar-title>Edit poll</v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn class="secondary"
-                ><v-icon @click="save" :disabled="!valid"
-                  >mdi-content-save</v-icon
-                ></v-btn
-              >
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn v-on="on" v-bind="attrs" class="secondary mr-2"
+                    ><v-icon @click="save" :disabled="!valid"
+                      >mdi-content-save</v-icon
+                    ></v-btn
+                  >
+                </template>
+                Save
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    @click="copyPollKeyToClipboard()"
+                    :class="copyToClipboardClass"
+                    v-on="on"
+                    v-bind="attrs"
+                    ><v-icon :disabled="!valid">{{
+                      copyToClipboardIcon
+                    }}</v-icon></v-btn
+                  >
+                </template>
+                Copy Poll URL to Clipboard
+              </v-tooltip>
             </v-toolbar>
           </v-card-title>
           <v-card-text>
@@ -43,6 +62,8 @@ export default {
     showAlert: false,
     alertType: "warning",
     alertMessage: "",
+    copyToClipboardClass: "secondary",
+    copyToClipboardIcon: "mdi-share",
   }),
   mounted() {
     this.load();
@@ -130,6 +151,23 @@ export default {
           setTimeout(() => {
             this.showAlert = false;
           }, 5000);
+        });
+    },
+    copyPollKeyToClipboard() {
+      navigator.clipboard
+        .writeText(
+          process.env.VUE_APP_SITE_URL + "/pollAnswer/" + this.item.poll.pollKey
+        )
+        .then(() => {
+          this.copyToClipboardClass = "green";
+          this.copyToClipboardIcon = "mdi-check";
+          setTimeout(() => {
+            this.copyToClipboardClass = "secondary";
+            this.copyToClipboardIcon = "mdi-share";
+          }, 1500);
+        })
+        .catch(function (err) {
+          console.error("Error al copiar el texto: ", err);
         });
     },
   },

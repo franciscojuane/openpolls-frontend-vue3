@@ -14,6 +14,11 @@ const routes = [
         component: () => import("../views/LoginView.vue"),
       },
       {
+        path: "/pollAnswer/:pollKey",
+        name: "pollAnswer",
+        component: () => import("../views/polls/PollAnswer.vue"),
+      },
+      {
         path: "/pollList",
         name: "pollList",
         component: () => import("../views/polls/PollsList.vue"),
