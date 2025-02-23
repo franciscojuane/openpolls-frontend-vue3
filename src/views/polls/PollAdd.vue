@@ -12,6 +12,11 @@
               >
             </v-toolbar>
           </v-card-title>
+          <v-row justify="center" v-if="error">
+            <v-col cols="11"
+              ><v-alert type="warning">{{ error.message }}</v-alert></v-col
+            >
+          </v-row>
           <v-card-text>
             <PollEditScreen
               @valid="valid = $event"
@@ -35,43 +40,58 @@ export default {
   data: () => ({
     item: null,
     valid: false,
+    error: null,
   }),
   mounted() {},
   methods: {
     save() {
-      this.$api.post("/polls", this.item.poll).then(({ data }) => {
-        let pollId = data.id;
-        let promises = [];
-        this.item.poll = data;
-        let newQuestions = [];
-        for (let questionNumber in this.item.questions) {
-          let question = this.item.questions[questionNumber];
-          question.rank = questionNumber;
-          if (question.id) {
-            promises.push(
-              this.$api
-                .patch(
-                  "/polls/" + pollId + "/questions/" + question.id,
-                  question
-                )
-                .then(({ data }) => {
-                  console.log(data);
-                  newQuestions.push(data);
-                })
-            );
-          } else {
-            promises.push(
-              this.$api
-                .post("/polls/" + pollId + "/questions", question)
-                .then(({ data }) => {
-                  console.log(data);
-                  newQuestions.push(data);
-                })
-            );
+      this.$api
+        .post("/polls", this.item.poll)
+        .then(({ data }) => {
+          let pollId = data.id;
+          let promises = [];
+          this.item.poll = data;
+          let newQuestions = [];
+          for (let questionNumber in this.item.questions) {
+            let question = this.item.questions[questionNumber];
+            question.rank = questionNumber;
+            if (question.id) {
+              promises.push(
+                this.$api
+                  .patch(
+                    "/polls/" + pollId + "/questions/" + question.id,
+                    question
+                  )
+                  .then(({ data }) => {
+                    console.log(data);
+                    newQuestions.push(data);
+                  })
+              );
+            } else {
+              promises.push(
+                this.$api
+                  .post("/polls/" + pollId + "/questions", question)
+                  .then(({ data }) => {
+                    console.log(data);
+                    newQuestions.push(data);
+                  })
+              );
+            }
           }
-        }
-        Promise.all(promises).then(() => {});
-      });
+          Promise.all(promises).then(() => {
+            this.$router.push({
+              name: "pollEdit",
+              params: { id: pollId, new: true },
+            });
+          });
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+          this.loading = false;
+          setTimeout(() => {
+            this.error = null;
+          }, 5000);
+        });
     },
   },
 };

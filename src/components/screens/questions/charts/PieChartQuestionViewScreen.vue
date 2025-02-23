@@ -70,7 +70,20 @@ export default {
                 v.id
             )
             .then(({ data }) => {
-              this.aggregatedData = data.content;
+              let options = this.question.options;
+              let result = [];
+              for (let option of options) {
+                let elemFromData = data.content.find(
+                  (elem) => elem.answer == option
+                );
+                if (elemFromData) {
+                  result.push(elemFromData);
+                } else {
+                  result.push({ answer: option, count: 0 });
+                }
+              }
+
+              this.aggregatedData = result;
               this.calculateOptions();
               this.calculateSeries();
               this.loading = false;

@@ -40,6 +40,17 @@
                 >
                 </v-textarea
               ></v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="3">
+                <v-select
+                  label="Select limiting criteria"
+                  item-text="name"
+                  item-value="value"
+                  v-model="internalPoll.submissionLimitCriteria"
+                  :items="submissionLimitCriteriaItems"
+                ></v-select>
+              </v-col>
             </v-row> </v-form
         ></v-card-text>
       </v-tab-item>
@@ -188,6 +199,7 @@ export default {
       description: null,
       effectiveDate: null,
       expirationDate: null,
+      submissionLimitCriteria: "NONE",
     },
     internalQuestions: [],
     effectiveQuestions: [],
@@ -225,8 +237,12 @@ export default {
         maxLength: 255,
       },
     },
+    submissionLimitCriteriaItems: [
+      { name: "IP Address", value: "IP" },
+      { name: "Email", value: "EMAIL" },
+      { name: "No Limit", value: "NONE" },
+    ],
     tabs: 0,
-
     showDeleteDialogFlag: false,
     itemSelectedForDeletion: null,
     showStepper: true,

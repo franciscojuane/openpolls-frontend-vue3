@@ -6,7 +6,7 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    component: () => import("../layouts/MainLayout.vue"),
+    component: () => import("../layouts/PublicLayout.vue"),
     children: [
       {
         path: "/login",
@@ -18,6 +18,12 @@ const routes = [
         name: "pollAnswer",
         component: () => import("../views/polls/PollAnswer.vue"),
       },
+    ],
+  },
+  {
+    path: "/",
+    component: () => import("../layouts/MainLayout.vue"),
+    children: [
       {
         path: "/pollList",
         name: "pollList",

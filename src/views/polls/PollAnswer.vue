@@ -3,166 +3,212 @@
     <v-row justify="center">
       <v-col cols="10">
         <v-card class="elevation-12">
-          <v-card-title>
-            <v-toolbar flat color="white">
-              <v-toolbar-title
-                >Poll Results: {{ poll ? poll.name : "" }}</v-toolbar-title
-              >
-            </v-toolbar>
-          </v-card-title>
-          <v-card-text>
-            <v-tabs v-model="tabs">
-              <v-tab>Graphics</v-tab>
-              <v-tab>Raw Data</v-tab>
-              <v-tab-item>
+          <v-row justify="center">
+            <v-col cols="8">
+              <v-container>
                 <v-card>
-                  <v-card-title>
-                    Question: {{ question ? question.text : "" }}
-                  </v-card-title>
+                  <v-card-title> {{ poll ? poll.name : "" }} </v-card-title>
+                  <v-card-subtitle class="text-left">{{
+                    poll ? poll.description : ""
+                  }}</v-card-subtitle>
+                </v-card>
+              </v-container>
+            </v-col>
+          </v-row>
+          <v-row justify="center" v-if="error">
+            <v-col cols="8"
+              ><v-alert type="warning">{{ error.message }}</v-alert></v-col
+            >
+          </v-row>
+
+          <v-row justify="center">
+            <v-col cols="8">
+              <v-container v-if="!successScreen">
+                <v-card>
+                  <v-card-title> Enter your email address </v-card-title>
                   <v-card-text>
-                    <v-pagination
-                      v-model="currentQuestion"
-                      :length="questions.length"
-                      prev-icon="mdi-menu-left"
-                      next-icon="mdi-menu-right"
-                    ></v-pagination>
-                    <BarChartQuestionViewScreen
-                      :question="question"
-                      height="500px"
-                      width="100%"
-                      v-if="
-                        question &&
-                        question.questionType &&
-                        (question.questionType.name == 'NUMERIC' ||
-                          question.questionType.name == 'SCALE')
-                      "
-                    >
-                    </BarChartQuestionViewScreen>
-                    <PieChartQuestionViewScreen
-                      height="500px"
-                      width="100%"
-                      :question="question"
-                      v-if="
-                        question &&
-                        question.questionType &&
-                        question.questionType.name == 'MULTIPLE_CHOICE'
-                      "
-                    ></PieChartQuestionViewScreen>
-                    <TextTableQuestionViewScreen
-                      :question="question"
-                      v-if="
-                        question &&
-                        question.questionType &&
-                        question.questionType.name == 'TEXT'
-                      "
-                    >
-                    </TextTableQuestionViewScreen>
+                    <v-row>
+                      <v-col cols="5">
+                        <v-text-field
+                          :rules="[
+                            (v) =>
+                              /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ||
+                              'The format is incorrect.',
+                          ]"
+                          v-model="emailAddress"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
                   </v-card-text>
                 </v-card>
-              </v-tab-item>
-              <v-tab-item
-                ><v-data-table
-                  :items="rawDataItems"
-                  :headers="headers"
-                  v-if="questions.length > 0"
+              </v-container>
+            </v-col>
+          </v-row>
+          <v-row justify="center">
+            <v-col cols="8">
+              <v-container v-if="!successScreen">
+                <v-row
+                  v-for="question of questions"
+                  :key="question.id"
+                  justify="center"
                 >
-                  <template
-                    v-slot:[`item.question${num}`]="{ item }"
-                    v-for="num of questionsIds.length"
+                  <v-col
+                    ><MultipleChoiceQuestionAnswerScreen
+                      v-if="question.questionType.name == 'MULTIPLE_CHOICE'"
+                      :question="question"
+                      @answer="answers[question.id] = $event"
+                      @valid="$set(valid, question.id, $event)"
+                    ></MultipleChoiceQuestionAnswerScreen>
+
+                    <NumericQuestionAnswerScreen
+                      v-if="question.questionType.name == 'NUMERIC'"
+                      :question="question"
+                      @answer="answers[question.id] = $event"
+                      @valid="$set(valid, question.id, $event)"
+                    ></NumericQuestionAnswerScreen>
+
+                    <ScaleQuestionAnswerScreen
+                      v-if="question.questionType.name == 'SCALE'"
+                      :question="question"
+                      @answer="answers[question.id] = $event"
+                      @valid="$set(valid, question.id, $event)"
+                    ></ScaleQuestionAnswerScreen>
+
+                    <TextQuestionAnswerScreen
+                      v-if="question.questionType.name == 'TEXT'"
+                      :question="question"
+                      @answer="answers[question.id] = $event"
+                      @valid="$set(valid, question.id, $event)"
+                    ></TextQuestionAnswerScreen>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-container>
+                    <v-btn
+                      class="primary"
+                      @click="submit"
+                      :loading="loading"
+                      :disabled="!allQuestionsAndEmailAreValid"
+                      >Submit</v-btn
+                    ></v-container
                   >
-                    <td :key="num">
-                      {{
-                        item.data.find((elem) => elem.questionId == num)
-                          ? item.data.find((elem) => elem.questionId == num)
-                              .answer
-                          : ""
-                      }}
-                    </td>
-                  </template>
-                  <template v-slot:[`item.identifier`]="{ item }">
-                    <td v-if="item.ipAddress">
-                      {{ item.ipAddress }}
-                    </td>
-                    <td v-else>
-                      {{ item.emailAddress }}
-                    </td>
-                  </template>
-                </v-data-table></v-tab-item
-              >
-            </v-tabs></v-card-text
-          >
+                </v-row>
+              </v-container>
+              <v-container v-else> Thanks for answering the poll. </v-container>
+            </v-col>
+          </v-row>
         </v-card>
       </v-col>
     </v-row>
+    <v-row> </v-row>
   </v-container>
 </template>
 <script>
-import BarChartQuestionViewScreen from "@/components/screens/questions/charts/BarChartQuestionViewScreen";
-import PieChartQuestionViewScreen from "@/components/screens/questions/charts/PieChartQuestionViewScreen";
-import TextTableQuestionViewScreen from "@/components/screens/questions/charts/TextTableQuestionViewScreen";
-
+import MultipleChoiceQuestionAnswerScreen from "@/components/screens/questions/answer/MultipleChoiceQuestionAnswerScreen";
+import NumericQuestionAnswerScreen from "@/components/screens/questions/answer/NumericQuestionAnswerScreen";
+import ScaleQuestionAnswerScreen from "@/components/screens/questions/answer/ScaleQuestionAnswerScreen";
+import TextQuestionAnswerScreen from "@/components/screens/questions/answer/TextQuestionAnswerScreen";
 export default {
   components: {
-    BarChartQuestionViewScreen,
-    PieChartQuestionViewScreen,
-    TextTableQuestionViewScreen,
+    MultipleChoiceQuestionAnswerScreen,
+    NumericQuestionAnswerScreen,
+    ScaleQuestionAnswerScreen,
+    TextQuestionAnswerScreen,
   },
   data: () => ({
-    headers: [],
     poll: {},
     tabs: 0,
-    questions: [{}],
-    questionsIds: [],
-    currentQuestion: 1,
-    rawDataItems: [],
+    questions: [],
+    emailAddress: null,
+    answers: {},
+    loading: false,
+    successScreen: false,
+    valid: {},
+    error: null,
   }),
   props: {},
 
   methods: {
     load() {
-      this.$api.get("/polls/" + this.$route.params.id).then(({ data }) => {
-        this.poll = data;
-        return this.$api
-          .get("/polls/" + this.$route.params.id + "/questions")
-          .then(({ data }) => {
-            this.questions = data;
-            this.headers = [{ text: "Identifier", value: "identifier" }];
-            this.questions.forEach((elem) => {
-              this.headers.push({
-                text: elem.text,
-                value: "question" + elem.id,
-              });
-            });
-            this.questionsIds = this.questions.map((elem) => elem.id);
-          });
-      });
-    },
-    loadRawDataItems() {
       this.$api
-        .get("/polls/" + this.poll.id + "/submissions/table")
+        .get("/public/polls/" + this.$route.params.pollKey)
         .then(({ data }) => {
-          this.rawDataItems = data.rows;
+          this.poll = data;
+          return this.$api
+            .get("/public/polls/" + this.$route.params.pollKey + "/questions")
+            .then(({ data }) => {
+              this.questions = data;
+            });
+        })
+        .catch((error) => {
+          console.log(error);
+          this.error = error.response.data;
+        });
+    },
+
+    submit() {
+      this.loading = true;
+      let answerPayload = [];
+      for (let answerKey of Object.keys(this.answers)) {
+        let answer = this.answers[answerKey];
+        if (Array.isArray(answer)) {
+          for (let innerAnswer of answer) {
+            answerPayload.push(innerAnswer);
+          }
+        } else {
+          answerPayload.push(answer);
+        }
+      }
+      let payload = {
+        submissionAnswers: answerPayload,
+        emailAddress: this.emailAddress,
+      };
+
+      this.$api
+        .post(
+          "/public/polls/" + this.$route.params.pollKey + "/submissions",
+          payload
+        )
+        .then(() => {
+          window.scroll({
+            top: 0,
+            left: 0,
+            behavior: "smooth",
+          });
+          setTimeout(() => {
+            this.successScreen = true;
+            this.loading = false;
+          }, 1000);
+        })
+        .catch((error) => {
+          window.scroll({
+            top: 0,
+            left: 0,
+            behavior: "smooth",
+          });
+          this.error = error.response.data;
+          this.loading = false;
+          setTimeout(() => {
+            this.error = null;
+          }, 5000);
         });
     },
   },
   computed: {
-    question() {
-      return this.questions[this.currentQuestion - 1];
+    allQuestionsAndEmailAreValid() {
+      let valid = true;
+      for (let question of this.questions) {
+        valid &= this.valid[question.id];
+      }
+      valid &= this.emailAddress != null;
+
+      let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      valid &= emailRegex.test(this.emailAddress);
+      return valid;
     },
   },
   async mounted() {
     await this.load();
-  },
-  watch: {
-    tabs: {
-      immediate: true,
-      handler(v) {
-        console.log(v);
-        if (v == 1 && this.rawDataItems.length == 0) {
-          this.loadRawDataItems();
-        }
-      },
-    },
   },
 };
 </script>

@@ -9,10 +9,13 @@
               <v-spacer></v-spacer>
               <v-tooltip top>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-btn v-on="on" v-bind="attrs" class="secondary mr-2"
-                    ><v-icon @click="save" :disabled="!valid"
-                      >mdi-content-save</v-icon
-                    ></v-btn
+                  <v-btn
+                    :loading="loading"
+                    v-on="on"
+                    v-bind="attrs"
+                    class="secondary mr-2"
+                    @click="save"
+                    ><v-icon :disabled="!valid">mdi-content-save</v-icon></v-btn
                   >
                 </template>
                 Save
@@ -33,6 +36,7 @@
               </v-tooltip>
             </v-toolbar>
           </v-card-title>
+
           <v-card-text>
             <v-alert :type="alertType" v-model="showAlert">{{
               alertMessage
@@ -64,32 +68,44 @@ export default {
     alertMessage: "",
     copyToClipboardClass: "secondary",
     copyToClipboardIcon: "mdi-share",
+    loading: false,
   }),
   mounted() {
     this.load();
+    if (this.$route.params.new) {
+      this.alertType = "green";
+      this.showAlert = true;
+      this.alertMessage = "Poll created successfully";
+      setTimeout(() => {
+        this.showAlert = false;
+      }, 5000);
+    }
   },
   methods: {
     load() {
-      this.$api.get("/polls/" + this.$route.params.id).then(({ data }) => {
-        this.item.poll = data;
-        this.$api
-          .get("/polls/" + this.$route.params.id + "/questions")
-          .then(({ data }) => {
-            this.item.questions = data;
-            console.log(this.item);
-          })
-          .catch((error) => {
-            this.showAlert = true;
-            this.alertType = "warning";
-            this.alertMessage = "Error happened while loading data.";
-            console.log(error);
-            setTimeout(() => {
-              this.showAlert = false;
-            }, 5000);
-          });
-      });
+      return this.$api
+        .get("/polls/" + this.$route.params.id)
+        .then(({ data }) => {
+          this.item.poll = data;
+          this.$api
+            .get("/polls/" + this.$route.params.id + "/questions")
+            .then(({ data }) => {
+              this.item.questions = data;
+              console.log(this.item);
+            })
+            .catch((error) => {
+              this.showAlert = true;
+              this.alertType = "warning";
+              this.alertMessage = "Error happened while loading data.";
+              console.log(error);
+              setTimeout(() => {
+                this.showAlert = false;
+              }, 5000);
+            });
+        });
     },
     save() {
+      this.loading = true;
       this.$api
         .patch("/polls/" + this.$route.params.id, this.item.poll)
         .then(({ data }) => {
@@ -125,15 +141,20 @@ export default {
           }
           Promise.all(promises)
             .then(() => {
-              this.load();
+              this.load().then(() => {
+                debugger;
+                this.loading = false;
+              });
               this.showAlert = true;
-              this.alertType = "success";
+              this.alertType = "green";
               this.alertMessage = "Changes saved successfully.";
               setTimeout(() => {
                 this.showAlert = false;
               }, 5000);
             })
             .catch((error) => {
+              console.log(error);
+              this.loading = false;
               this.showAlert = true;
               this.alertType = "warning";
               this.alertMessage = "Error happened while saving data.";
@@ -144,6 +165,8 @@ export default {
             });
         })
         .catch((error) => {
+          console.log(error);
+          this.loading = false;
           this.showAlert = true;
           this.alertType = "warning";
           this.alertMessage = "Error happened while saving data.";

@@ -101,7 +101,7 @@ export default {
       if (this.slideOnDateSelection) {
         setTimeout(() => {
           this.tabs = 1;
-        }, 600);
+        }, 200);
       }
     },
   },

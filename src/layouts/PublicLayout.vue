@@ -2,11 +2,7 @@
   <v-app>
     <v-container>
       <v-app-bar app color="secondary" dark>
-        <v-toolbar-title
-          @click="$router.push({ name: 'pollList' })"
-          style="cursor: pointer"
-          >OpenPolls</v-toolbar-title
-        >
+        <v-toolbar-title>OpenPolls</v-toolbar-title>
       </v-app-bar>
 
       <v-main>

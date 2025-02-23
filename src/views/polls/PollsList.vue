@@ -4,7 +4,11 @@
       <v-col cols="10">
         <v-card class="elevation-12">
           <v-card-text
-            ><v-data-table :items="this.items" :headers="headers">
+            ><v-data-table
+              :items="this.items"
+              :headers="headers"
+              :loading="loading"
+            >
               <template v-slot:top>
                 <v-toolbar flat color="white">
                   <v-toolbar-title>Polls</v-toolbar-title>
@@ -133,22 +137,33 @@ export default {
 
       { value: "actions", text: "Actions", align: "right", sortable: false },
     ],
+    loading: false,
   }),
   mounted() {
     this.loadData();
   },
   methods: {
     loadData() {
+      this.loading = true;
       return this.$api.get("/polls").then(({ data }) => {
         this.items = data.content;
         this.items.forEach((elem) => {
-          elem.effectiveDate = moment(elem.effectiveDate).format(
-            "MM-DD-YYYY HH:mm:ss"
-          );
-          elem.expirationDate = moment(elem.expirationDate).format(
-            "MM-DD-YYYY HH:mm:ss"
-          );
+          if (elem.effectiveDate) {
+            elem.effectiveDate = moment(elem.effectiveDate).format(
+              "MM-DD-YYYY HH:mm:ss"
+            );
+          } else {
+            elem.effectiveDate = "";
+          }
+          if (elem.expirationDate) {
+            elem.expirationDate = moment(elem.expirationDate).format(
+              "MM-DD-YYYY HH:mm:ss"
+            );
+          } else {
+            elem.expirationDate = "";
+          }
         });
+        this.loading = false;
       });
     },
     showDeleteDialog(item) {
