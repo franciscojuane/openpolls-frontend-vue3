@@ -20,6 +20,7 @@
                         @click="$router.push({ name: 'pollAdd' })"
                         v-bind="attrs"
                         v-on="on"
+                        :disabled="!$auth.hasPermission('POLL_CREATE')"
                         ><v-icon>mdi-plus</v-icon></v-btn
                       >
                     </template>
@@ -29,9 +30,11 @@
               </template>
               <template v-slot:[`item.name`]="{ item }">
                 <router-link
+                  v-if="$auth.hasPermission('POLL_UPDATE')"
                   :to="{ name: 'pollEdit', params: { id: item.id } }"
                   >{{ item.name }}</router-link
                 >
+                <span v-else>{{ item.name }}</span>
               </template>
               <template v-slot:[`item.status`]="{ item }">
                 <v-chip :color="item.effective ? 'green' : 'red'">{{
@@ -40,7 +43,10 @@
               </template>
               <template v-slot:[`item.actions`]="{ item }">
                 <v-tooltip top>
-                  <template v-slot:activator="{ on, attrs }">
+                  <template
+                    v-slot:activator="{ on, attrs }"
+                    v-if="$auth.hasPermission('POLL_UPDATE')"
+                  >
                     <v-icon
                       @click="
                         $router.push({
@@ -55,7 +61,7 @@
                   </template>
                   Edit
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top v-if="$auth.hasPermission('RESULTS_READ')">
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
                       @click="
@@ -73,7 +79,10 @@
                   View Results
                 </v-tooltip>
                 <v-tooltip top>
-                  <template v-slot:activator="{ on, attrs }">
+                  <template
+                    v-slot:activator="{ on, attrs }"
+                    v-if="$auth.hasPermission('POLL_DELETE')"
+                  >
                     <v-icon
                       class="ml-1 mr-1"
                       @click="showDeleteDialog(item)"

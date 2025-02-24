@@ -70,18 +70,14 @@ export default {
     login() {
       this.loading = true;
       this.error = null;
-      this.$api
-        .post("/auth/login", {
-          username: this.username,
-          password: this.password,
+      this.$auth
+        .login(this.username, this.password)
+        .then(() => {
+          this.$router.push("pollList");
         })
         .catch((error) => {
           this.loading = false;
           this.error = error;
-        })
-        .then(({ data }) => {
-          window.localStorage.setItem("token", data.token);
-          this.$router.push("pollList");
         });
     },
   },

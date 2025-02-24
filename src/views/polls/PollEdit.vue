@@ -15,7 +15,8 @@
                     v-bind="attrs"
                     class="secondary mr-2"
                     @click="save"
-                    ><v-icon :disabled="!valid">mdi-content-save</v-icon></v-btn
+                    :disabled="!valid || !$auth.hasPermission('POLL_UPDATE')"
+                    ><v-icon>mdi-content-save</v-icon></v-btn
                   >
                 </template>
                 Save
@@ -69,6 +70,7 @@ export default {
     copyToClipboardClass: "secondary",
     copyToClipboardIcon: "mdi-share",
     loading: false,
+    error: null,
   }),
   mounted() {
     this.load();
@@ -142,7 +144,6 @@ export default {
           Promise.all(promises)
             .then(() => {
               this.load().then(() => {
-                debugger;
                 this.loading = false;
               });
               this.showAlert = true;
@@ -154,10 +155,11 @@ export default {
             })
             .catch((error) => {
               console.log(error);
+              this.error = error.response.data;
               this.loading = false;
               this.showAlert = true;
               this.alertType = "warning";
-              this.alertMessage = "Error happened while saving data.";
+              this.alertMessage = this.error.message;
               console.log(error);
               setTimeout(() => {
                 this.showAlert = false;
@@ -166,10 +168,11 @@ export default {
         })
         .catch((error) => {
           console.log(error);
+          this.error = error.response.data;
           this.loading = false;
           this.showAlert = true;
           this.alertType = "warning";
-          this.alertMessage = "Error happened while saving data.";
+          this.alertMessage = this.error.message;
           console.log(error);
           setTimeout(() => {
             this.showAlert = false;

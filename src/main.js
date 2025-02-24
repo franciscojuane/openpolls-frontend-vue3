@@ -5,6 +5,7 @@ import store from "./store";
 import vuetify from "./plugins/vuetify";
 import axios from "./plugins/axios";
 import apexCharts from "./plugins/apexCharts";
+import AuthService from "@/services/authService.js";
 import "@mdi/font/css/materialdesignicons.css";
 
 Vue.config.productionTip = false;
@@ -17,3 +18,5 @@ new Vue({
   apexCharts,
   render: (h) => h(App),
 }).$mount("#app");
+
+Vue.prototype.$auth = AuthService;
