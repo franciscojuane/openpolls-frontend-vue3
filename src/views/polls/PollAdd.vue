@@ -66,6 +66,9 @@ export default {
                     console.log(data);
                     newQuestions.push(data);
                   })
+                  .catch((error) => {
+                    console.log(error);
+                  })
               );
             } else {
               promises.push(
@@ -75,15 +78,22 @@ export default {
                     console.log(data);
                     newQuestions.push(data);
                   })
+                  .catch((error) => {
+                    console.log(error);
+                  })
               );
             }
           }
-          Promise.all(promises).then(() => {
-            this.$router.push({
-              name: "pollEdit",
-              params: { id: pollId, new: true },
+          Promise.all(promises)
+            .then(() => {
+              this.$router.push({
+                name: "pollEdit",
+                params: { id: pollId, new: true },
+              });
+            })
+            .catch((error) => {
+              console.log(error);
             });
-          });
         })
         .catch((error) => {
           this.error = error.response.data;

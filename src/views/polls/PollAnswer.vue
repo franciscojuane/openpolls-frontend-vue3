@@ -138,6 +138,9 @@ export default {
             .get("/public/polls/" + this.$route.params.pollKey + "/questions")
             .then(({ data }) => {
               this.questions = data;
+            })
+            .catch((error) => {
+              console.log(error);
             });
         })
         .catch((error) => {

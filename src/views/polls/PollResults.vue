@@ -120,28 +120,39 @@ export default {
 
   methods: {
     load() {
-      this.$api.get("/polls/" + this.$route.params.id).then(({ data }) => {
-        this.poll = data;
-        return this.$api
-          .get("/polls/" + this.$route.params.id + "/questions")
-          .then(({ data }) => {
-            this.questions = data;
-            this.headers = [{ text: "Identifier", value: "identifier" }];
-            this.questions.forEach((elem) => {
-              this.headers.push({
-                text: elem.text,
-                value: "question" + elem.id,
+      this.$api
+        .get("/polls/" + this.$route.params.id)
+        .then(({ data }) => {
+          this.poll = data;
+          return this.$api
+            .get("/polls/" + this.$route.params.id + "/questions")
+            .then(({ data }) => {
+              this.questions = data;
+              this.headers = [{ text: "Identifier", value: "identifier" }];
+              this.questions.forEach((elem) => {
+                this.headers.push({
+                  text: elem.text,
+                  value: "question" + elem.id,
+                });
               });
+              this.questionsIds = this.questions.map((elem) => elem.id);
+            })
+            .catch((error) => {
+              console.log(error);
             });
-            this.questionsIds = this.questions.map((elem) => elem.id);
-          });
-      });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     loadRawDataItems() {
       this.$api
         .get("/polls/" + this.poll.id + "/submissions/table")
         .then(({ data }) => {
           this.rawDataItems = data.rows;
+        })
+        .catch((error) => {
+          console.log(error);
         });
     },
   },

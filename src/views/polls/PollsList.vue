@@ -154,33 +154,42 @@ export default {
   methods: {
     loadData() {
       this.loading = true;
-      return this.$api.get("/polls").then(({ data }) => {
-        this.items = data.content;
-        this.items.forEach((elem) => {
-          if (elem.effectiveDate) {
-            elem.effectiveDate = moment(elem.effectiveDate).format(
-              "MM-DD-YYYY HH:mm:ss"
-            );
-          } else {
-            elem.effectiveDate = "";
-          }
-          if (elem.expirationDate) {
-            elem.expirationDate = moment(elem.expirationDate).format(
-              "MM-DD-YYYY HH:mm:ss"
-            );
-          } else {
-            elem.expirationDate = "";
-          }
+      return this.$api
+        .get("/polls")
+        .then(({ data }) => {
+          this.items = data.content;
+          this.items.forEach((elem) => {
+            if (elem.effectiveDate) {
+              elem.effectiveDate = moment(elem.effectiveDate).format(
+                "MM-DD-YYYY HH:mm:ss"
+              );
+            } else {
+              elem.effectiveDate = "";
+            }
+            if (elem.expirationDate) {
+              elem.expirationDate = moment(elem.expirationDate).format(
+                "MM-DD-YYYY HH:mm:ss"
+              );
+            } else {
+              elem.expirationDate = "";
+            }
+          });
+          this.loading = false;
+        })
+        .catch((error) => {
+          console.log(error);
         });
-        this.loading = false;
-      });
     },
     showDeleteDialog(item) {
       this.showDeleteDialogFlag = true;
       this.itemSelectedForDeletion = item;
     },
     deleteSelectedItem() {
-      return this.$api.delete("/polls/" + this.itemSelectedForDeletion.id);
+      return this.$api
+        .delete("/polls/" + this.itemSelectedForDeletion.id)
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };

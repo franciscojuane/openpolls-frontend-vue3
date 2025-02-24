@@ -56,6 +56,9 @@ export default {
           this.textTableItems = data.content;
           this.totalTextItems = data.page.totalElements;
           this.loading = false;
+        })
+        .catch((error) => {
+          console.log(error);
         });
     },
   },

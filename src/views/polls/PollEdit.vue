@@ -104,6 +104,9 @@ export default {
                 this.showAlert = false;
               }, 5000);
             });
+        })
+        .catch((error) => {
+          console.log(error);
         });
     },
     save() {
@@ -122,22 +125,34 @@ export default {
             if (question.id) {
               if (question.delete) {
                 promises.push(
-                  this.$api.delete(
-                    "/polls/" + pollId + "/questions/" + question.id,
-                    question
-                  )
+                  this.$api
+                    .delete(
+                      "/polls/" + pollId + "/questions/" + question.id,
+                      question
+                    )
+                    .catch((error) => {
+                      console.log(error);
+                    })
                 );
               } else if (question.update) {
                 promises.push(
-                  this.$api.patch(
-                    "/polls/" + pollId + "/questions/" + question.id,
-                    question
-                  )
+                  this.$api
+                    .patch(
+                      "/polls/" + pollId + "/questions/" + question.id,
+                      question
+                    )
+                    .catch((error) => {
+                      console.log(error);
+                    })
                 );
               }
             } else {
               promises.push(
-                this.$api.post("/polls/" + pollId + "/questions", question)
+                this.$api
+                  .post("/polls/" + pollId + "/questions", question)
+                  .catch((error) => {
+                    console.log(error);
+                  })
               );
             }
           }

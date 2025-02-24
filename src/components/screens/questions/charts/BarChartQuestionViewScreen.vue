@@ -82,6 +82,9 @@ export default {
               this.calculateOptions();
               this.calculateSeries();
               this.loading = false;
+            })
+            .catch((error) => {
+              console.log(error);
             });
         }
       },
