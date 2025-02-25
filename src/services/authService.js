@@ -21,6 +21,10 @@ const AuthService = {
     let user = JSON.parse(window.localStorage.getItem("user"));
     return user.roles.find((elem) => elem.name == role) != null;
   },
+  getUser() {
+    let user = JSON.parse(window.localStorage.getItem("user"));
+    return user;
+  },
   hasPermission(permission) {
     let user = JSON.parse(window.localStorage.getItem("user"));
     for (let role of user.roles) {

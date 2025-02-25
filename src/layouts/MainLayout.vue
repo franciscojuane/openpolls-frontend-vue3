@@ -2,11 +2,26 @@
   <v-app>
     <v-container>
       <v-app-bar app color="secondary" dark>
-        <v-toolbar-title
-          @click="$router.push({ name: 'pollList' })"
-          style="cursor: pointer"
-          >OpenPolls</v-toolbar-title
-        >
+        <v-toolbar dense color="secondary" class="elevation-12"
+          ><v-toolbar-title
+            @click="$router.push({ name: 'pollList' })"
+            style="cursor: pointer"
+            >OpenPolls</v-toolbar-title
+          >
+          <v-spacer></v-spacer>
+          {{ $auth.getUser() ? $auth.getUser().firstName : "" }}
+          {{ $auth.getUser() ? $auth.getUser().lastName : "" }}
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon>
+                <v-icon @click="logOut" v-on="on" v-bind="attrs"
+                  >mdi-account-arrow-right</v-icon
+                >
+              </v-btn>
+            </template>
+            Sign out
+          </v-tooltip>
+        </v-toolbar>
       </v-app-bar>
 
       <v-main>
@@ -23,5 +38,11 @@
 <script>
 export default {
   name: "MainLayout",
+  methods: {
+    logOut() {
+      this.$auth.logout();
+      this.$router.push({ name: "loginView" });
+    },
+  },
 };
 </script>
