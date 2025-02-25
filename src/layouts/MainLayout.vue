@@ -9,8 +9,8 @@
             >OpenPolls</v-toolbar-title
           >
           <v-spacer></v-spacer>
-          {{ $auth.getUser() ? $auth.getUser().firstName : "" }}
-          {{ $auth.getUser() ? $auth.getUser().lastName : "" }}
+          {{ currentUser ? currentUser.firstName : "" }}
+          {{ currentUser ? currentUser.lastName : "" }}
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
               <v-btn icon>
@@ -42,6 +42,11 @@ export default {
     logOut() {
       this.$auth.logout();
       this.$router.push({ name: "loginView" });
+    },
+  },
+  computed: {
+    currentUser() {
+      return this.$store.state.currentUser;
     },
   },
 };

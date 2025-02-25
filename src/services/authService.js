@@ -1,4 +1,5 @@
 import ApiService from "@/plugins/axios.js";
+import store from "@/store";
 
 const AuthService = {
   login(username, password) {
@@ -8,14 +9,13 @@ const AuthService = {
     }).then(({ data }) => {
       window.localStorage.setItem("token", data.token);
       ApiService.get("/users/getCurrentUser").then(({ data }) => {
-        console.log(data);
-        window.localStorage.setItem("user", JSON.stringify(data));
+        store.commit("setCurrentUser", { user: data });
       });
     });
   },
   logout() {
     window.localStorage.removeItem("token");
-    window.localStorage.removeItem("user");
+    store.commit("removeCurrentUser");
   },
   hasRole(role) {
     let user = JSON.parse(window.localStorage.getItem("user"));
