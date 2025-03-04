@@ -19,5 +19,22 @@ The OpenPolls Frontend is a user-friendly web application built with Vue 2, Vuet
 
 * Vuex: State management library for Vue.js.
 
+## Project Setup
+### Install Dependencies
+
+To install the required dependencies, run:
+```
+npm install
+```
+### Compiles and Hot-Reloads for Development
+
+To start the development server, run:
+
+```
+npm run serve
+```
+This will launch the application in development mode with hot-reloading enabled. Open your browser and navigate to http://localhost:8080 to view the app.
+
+
 ## Purpose
 This project showcases my skills in modern frontend development, including state management with Vuex, component-based architecture, and responsive design with Vuetify. It is designed to work hand-in-hand with the OpenPolls Backend, providing a seamless experience for both poll creators and respondents.
