@@ -36,6 +36,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   name: "MainLayout",
   methods: {
@@ -45,9 +47,7 @@ export default {
     },
   },
   computed: {
-    currentUser() {
-      return this.$store.state.currentUser;
-    },
+    ...mapState(["currentUser"]),
   },
 };
 </script>

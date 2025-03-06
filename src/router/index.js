@@ -9,6 +9,10 @@ const routes = [
     component: () => import("../layouts/PublicLayout.vue"),
     children: [
       {
+        path: "/",
+        redirect: "/login",
+      },
+      {
         path: "/login",
         name: "loginView",
         component: () => import("../views/LoginView.vue"),
