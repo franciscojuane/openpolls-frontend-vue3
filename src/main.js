@@ -1,22 +1,23 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import ApiService from "./plugins/axios";
-import apexCharts from "./plugins/apexCharts";
+import VueApexCharts from "./plugins/apexCharts";
 import AuthService from "@/services/authService.js";
 import "@mdi/font/css/materialdesignicons.css";
 
-Vue.config.productionTip = false;
+const app = createApp(App);
 
-new Vue({
-  router,
-  store,
-  vuetify,
-  apexCharts,
-  render: (h) => h(App),
-}).$mount("#app");
+app.use(vuetify);
+app.use("ApexChart", VueApexCharts);
+app.use(router);
+app.use(store);
 
-Vue.prototype.$auth = AuthService;
-Vue.prototype.$api = ApiService;
+app.config.globalProperties.$auth = AuthService;
+app.config.globalProperties.$api = ApiService;
+
+app.config.productionTip = false;
+
+app.mount("#app");
