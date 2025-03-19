@@ -1,4 +1,3 @@
-import Vue from "vue";
 import axios from "axios";
 
 const api = axios.create({
@@ -39,7 +38,5 @@ const ApiService = {
     }
   },
 };
-
-Vue.prototype.$api = ApiService;
 
 export default ApiService;
