@@ -4,23 +4,30 @@
       <v-col cols="10">
         <v-card class="elevation-12">
           <v-card-text
-            ><v-data-table
-              :items="this.items"
+            ><v-data-table-server
+              :items="items"
+              :itemsLength="totalItems"
               :headers="headers"
               :loading="loading"
+              :items-per-page="itemsPerPage"
+              @update:options="loadData"
+              :page="currentPage + 1"
             >
               <template v-slot:top>
-                <v-toolbar flat color="white">
-                  <v-toolbar-title>Polls</v-toolbar-title>
-                  <v-spacer></v-spacer>
-                  <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
+                <v-toolbar
+                  flat
+                  color="white"
+                  title="Polls"
+                  density="compact"
+                  class="text-start"
+                >
+                  <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
                       <v-btn
                         class="secondary"
                         @click="$router.push({ name: 'pollAdd' })"
-                        v-bind="attrs"
-                        v-on="on"
-                        :disabled="!$auth.hasPermission('POLL_CREATE')"
+                        v-bind="props"
+                        :disabled="!auth.hasPermission('POLL_CREATE')"
                         ><v-icon>mdi-plus</v-icon></v-btn
                       >
                     </template>
@@ -30,7 +37,7 @@
               </template>
               <template v-slot:[`item.name`]="{ item }">
                 <router-link
-                  v-if="$auth.hasPermission('POLL_UPDATE')"
+                  v-if="auth.hasPermission('POLL_UPDATE')"
                   :to="{ name: 'pollEdit', params: { id: item.id } }"
                   >{{ item.name }}</router-link
                 >
@@ -42,10 +49,10 @@
                 }}</v-chip>
               </template>
               <template v-slot:[`item.actions`]="{ item }">
-                <v-tooltip top>
+                <v-tooltip location="top">
                   <template
-                    v-slot:activator="{ on, attrs }"
-                    v-if="$auth.hasPermission('POLL_UPDATE')"
+                    v-slot:activator="{ props }"
+                    v-if="auth.hasPermission('POLL_UPDATE')"
                   >
                     <v-icon
                       @click="
@@ -54,15 +61,17 @@
                           params: { id: item.id },
                         })
                       "
-                      v-bind="attrs"
-                      v-on="on"
+                      v-bind="props"
                       >mdi-pencil</v-icon
                     >
                   </template>
                   Edit
                 </v-tooltip>
-                <v-tooltip top v-if="$auth.hasPermission('RESULTS_READ')">
-                  <template v-slot:activator="{ on, attrs }">
+                <v-tooltip
+                  location="top"
+                  v-if="auth.hasPermission('RESULTS_READ')"
+                >
+                  <template v-slot:activator="{ props }">
                     <v-icon
                       @click="
                         $router.push({
@@ -71,30 +80,28 @@
                         })
                       "
                       class="ml-1 mr-1"
-                      v-bind="attrs"
-                      v-on="on"
+                      v-bind="props"
                       >mdi-eye</v-icon
                     >
                   </template>
                   View Results
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip location="top">
                   <template
-                    v-slot:activator="{ on, attrs }"
-                    v-if="$auth.hasPermission('POLL_DELETE')"
+                    v-slot:activator="{ props }"
+                    v-if="auth.hasPermission('POLL_DELETE')"
                   >
                     <v-icon
                       class="ml-1 mr-1"
                       @click="showDeleteDialog(item)"
-                      v-bind="attrs"
-                      v-on="on"
+                      v-bind="props"
                       >mdi-delete</v-icon
                     >
                   </template>
                   Delete
                 </v-tooltip>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-card-text>
         </v-card>
       </v-col>
@@ -123,74 +130,76 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import moment from "moment";
+import { inject, reactive, ref, onMounted } from "vue";
 
-export default {
-  data: () => ({
-    items: [],
-    showDeleteDialogFlag: false,
-    itemSelectedForDeletion: null,
-    headers: [
-      { value: "name", text: "Poll Name", sortable: false },
-      { value: "description", text: "Poll Description", sortable: false },
-      { value: "amountOfQuestions", text: "Num. of Questions" },
-      { value: "effectiveDate", text: "Effective Date" },
-      { value: "expirationDate", text: "Expiration Date" },
-      {
-        value: "status",
-        text: "Status",
-        sortable: false,
-        align: "center",
-      },
+let items = reactive([]);
+let totalItems = ref(0);
+let itemsPerPage = ref(10);
+let currentPage = ref(0);
+let showDeleteDialogFlag = ref(false);
+let itemSelectedForDeletion = ref(null);
+let headers = reactive([
+  { value: "name", text: "Poll Name", sortable: false },
+  { value: "description", text: "Poll Description", sortable: false },
+  { value: "amountOfQuestions", text: "Num. of Questions" },
+  { value: "effectiveDate", text: "Effective Date" },
+  { value: "expirationDate", text: "Expiration Date" },
+  {
+    value: "status",
+    text: "Status",
+    sortable: false,
+    align: "center",
+  },
 
-      { value: "actions", text: "Actions", align: "right", sortable: false },
-    ],
-    loading: false,
-  }),
-  mounted() {
-    this.loadData();
-  },
-  methods: {
-    loadData() {
-      this.loading = true;
-      return this.$api
-        .get("/polls")
-        .then(({ data }) => {
-          this.items = data.content;
-          this.items.forEach((elem) => {
-            if (elem.effectiveDate) {
-              elem.effectiveDate = moment(elem.effectiveDate).format(
-                "MM-DD-YYYY HH:mm:ss"
-              );
-            } else {
-              elem.effectiveDate = "";
-            }
-            if (elem.expirationDate) {
-              elem.expirationDate = moment(elem.expirationDate).format(
-                "MM-DD-YYYY HH:mm:ss"
-              );
-            } else {
-              elem.expirationDate = "";
-            }
-          });
-          this.loading = false;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
-    showDeleteDialog(item) {
-      this.showDeleteDialogFlag = true;
-      this.itemSelectedForDeletion = item;
-    },
-    deleteSelectedItem() {
-      return this.$api
-        .delete("/polls/" + this.itemSelectedForDeletion.id)
-        .catch((error) => {
-          console.log(error);
-        });
-    },
-  },
-};
+  { value: "actions", text: "Actions", align: "right", sortable: false },
+]);
+let loading = ref(false);
+let api = inject("api");
+let auth = inject("auth");
+
+onMounted(() => {
+  loadData();
+});
+
+function loadData() {
+  loading.value = true;
+  return api
+    .get("/polls?page=" + currentPage.value + "&size=" + itemsPerPage.value)
+    .then(({ data }) => {
+      items = data.content;
+      totalItems.value = data.page.totalElements;
+      currentPage.value = data.page.number;
+      items.forEach((elem) => {
+        if (elem.effectiveDate) {
+          elem.effectiveDate = moment(elem.effectiveDate).format(
+            "MM-DD-YYYY HH:mm:ss"
+          );
+        } else {
+          elem.effectiveDate = "";
+        }
+        if (elem.expirationDate) {
+          elem.expirationDate = moment(elem.expirationDate).format(
+            "MM-DD-YYYY HH:mm:ss"
+          );
+        } else {
+          elem.expirationDate = "";
+        }
+      });
+      loading.value = false;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+function showDeleteDialog(item) {
+  showDeleteDialogFlag.value = true;
+  itemSelectedForDeletion = item;
+}
+function deleteSelectedItem() {
+  return api.delete("/polls/" + itemSelectedForDeletion.id).catch((error) => {
+    console.log(error);
+  });
+}
 </script>
