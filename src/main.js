@@ -11,12 +11,13 @@ import "@mdi/font/css/materialdesignicons.css";
 const app = createApp(App);
 
 app.use(vuetify);
-app.use("ApexChart", VueApexCharts);
 app.use(router);
 app.use(store);
 
-app.config.globalProperties.$auth = AuthService;
-app.config.globalProperties.$api = ApiService;
+app.component("ApexChart", VueApexCharts);
+
+app.provide("auth", AuthService);
+app.provide("api", ApiService);
 
 app.config.productionTip = false;
 

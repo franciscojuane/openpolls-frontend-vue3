@@ -22,8 +22,7 @@
                     required
                     v-model="username"
                     prepend-icon="mdi-account"
-                    >Username</v-text-field
-                  >
+                  ></v-text-field>
                 </v-col>
               </v-row>
               <v-row justify="center" class="mt-n2">
@@ -34,15 +33,21 @@
                     v-model="password"
                     prepend-icon="mdi-key"
                     type="password"
-                    >Password</v-text-field
-                  >
+                  ></v-text-field>
                 </v-col>
               </v-row>
             </v-card-text>
             <v-card-actions>
               <v-container>
                 <v-row justify="end">
-                  <v-btn class="primary" :loading="loading" @click="login()"
+                  <v-btn
+                    class="primary"
+                    :loading="loading"
+                    @click="
+                      () => {
+                        login();
+                      }
+                    "
                     >Login</v-btn
                   >
                 </v-row>
@@ -56,33 +61,36 @@
   </div>
 </template>
 
-<script>
-export default {
+<script setup>
+import { inject, defineOptions, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+defineOptions({
   name: "LoginView",
-  components: {},
-  data: () => ({
-    loading: false,
-    username: "admin@admin.com",
-    password: "admin",
-    error: null,
-  }),
-  methods: {
-    login() {
-      this.loading = true;
-      this.error = null;
-      this.$auth
-        .login(this.username, this.password)
-        .then(() => {
-          this.$router.push("pollList");
-        })
-        .catch((error) => {
-          this.loading = false;
-          this.error = error;
-        });
-    },
-  },
-  mounted() {
-    window.localStorage.removeItem("token");
-  },
-};
+});
+
+let loading = ref(false);
+let username = ref("admin@admin.com");
+let password = ref("admin");
+let error = ref(null);
+let router = useRouter();
+let auth = inject("auth");
+
+function login() {
+  console.log("login");
+  loading.value = true;
+  error.value = null;
+  auth
+    .login(username.value, password.value)
+    .then(() => {
+      router.push("pollList");
+    })
+    .catch((error) => {
+      loading.value = false;
+      error.value = error;
+    });
+}
+onMounted(() => {
+  window.localStorage.removeItem("token");
+});
 </script>
