@@ -3,8 +3,10 @@
     <v-tabs v-model="tabs">
       <v-tab>Information</v-tab>
       <v-tab>Questions</v-tab>
+    </v-tabs>
 
-      <v-tab-item>
+    <v-tabs-window v-model="tabs">
+      <v-tabs-window-item>
         <v-card-text>
           <v-form v-model="informationFormValid">
             <v-row>
@@ -53,8 +55,8 @@
               </v-col>
             </v-row> </v-form
         ></v-card-text>
-      </v-tab-item>
-      <v-tab-item>
+      </v-tabs-window-item>
+      <v-tabs-window-item>
         <v-container>
           <v-card>
             <v-card-title>
@@ -153,8 +155,9 @@
             </v-card-text>
           </v-card>
         </v-container>
-      </v-tab-item>
-    </v-tabs>
+      </v-tabs-window-item>
+    </v-tabs-window>
+
     <v-dialog v-model="showDeleteDialogFlag" max-width="500">
       <v-card>
         <v-card-title>Confirm Deletion</v-card-title>

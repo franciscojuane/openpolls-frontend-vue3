@@ -8,11 +8,10 @@
               <v-toolbar-title>Edit poll</v-toolbar-title>
               <v-spacer></v-spacer>
               <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
+                <template v-slot:activator="{ props }">
                   <v-btn
                     :loading="loading"
-                    v-on="on"
-                    v-bind="attrs"
+                    v-bind="props"
                     class="secondary mr-2"
                     @click="save"
                     :disabled="!valid || !$auth.hasPermission('POLL_UPDATE')"
@@ -22,12 +21,11 @@
                 Save
               </v-tooltip>
               <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
+                <template v-slot:activator="{ props }">
                   <v-btn
                     @click="copyPollKeyToClipboard()"
                     :class="copyToClipboardClass"
-                    v-on="on"
-                    v-bind="attrs"
+                    v-bind="props"
                     ><v-icon :disabled="!valid">{{
                       copyToClipboardIcon
                     }}</v-icon></v-btn
@@ -53,133 +51,119 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import PollEditScreen from "@/components/screens/PollEditScreen";
-export default {
-  name: "PollEdit",
-  components: {
-    PollEditScreen,
-  },
+import { reactive, ref, onMounted, inject } from "vue";
+import { useRoute } from "vue-router";
 
-  data: () => ({
-    item: null,
-    valid: false,
-    showAlert: false,
-    alertType: "warning",
-    alertMessage: "",
-    copyToClipboardClass: "secondary",
-    copyToClipboardIcon: "mdi-share",
-    loading: false,
-    error: null,
-  }),
-  mounted() {
-    this.load();
-    if (this.$route.params.new) {
-      this.alertType = "green";
-      this.showAlert = true;
-      this.alertMessage = "Poll created successfully";
-      setTimeout(() => {
-        this.showAlert = false;
-      }, 5000);
-    }
-  },
-  methods: {
-    load() {
-      return this.$api
-        .get("/polls/" + this.$route.params.id)
+const api = inject("api");
+const route = useRoute();
+
+const item = reactive({});
+const valid = ref(false);
+const showAlert = ref(false);
+const alertType = ref("warning");
+const alertMessage = ref("");
+const copyToClipboardClass = ref("secondary");
+const copyToClipboardIcon = ref("mdi-share");
+const loading = ref(false);
+//const error = ref(null);
+onMounted(() => {
+  load();
+  if (route.params.new) {
+    this.alertType = "green";
+    this.showAlert = true;
+    this.alertMessage = "Poll created successfully";
+    setTimeout(() => {
+      this.showAlert = false;
+    }, 5000);
+  }
+});
+
+function load() {
+  return api
+    .get("/polls/" + route.params.id)
+    .then(({ data }) => {
+      this.item.poll = data;
+      api
+        .get("/polls/" + route.params.id + "/questions")
         .then(({ data }) => {
-          this.item.poll = data;
-          this.$api
-            .get("/polls/" + this.$route.params.id + "/questions")
-            .then(({ data }) => {
-              this.item.questions = data;
-              console.log(this.item);
-            })
-            .catch((error) => {
-              this.showAlert = true;
-              this.alertType = "warning";
-              this.alertMessage = "Error happened while loading data.";
-              console.log(error);
-              setTimeout(() => {
-                this.showAlert = false;
-              }, 5000);
-            });
+          this.item.questions = data;
+          console.log(this.item);
         })
         .catch((error) => {
+          this.showAlert = true;
+          this.alertType = "warning";
+          this.alertMessage = "Error happened while loading data.";
           console.log(error);
+          setTimeout(() => {
+            this.showAlert = false;
+          }, 5000);
         });
-    },
-    save() {
-      this.loading = true;
-      this.$api
-        .patch("/polls/" + this.$route.params.id, this.item.poll)
-        .then(({ data }) => {
-          let pollId = data.id;
-          let promises = [];
-          this.item.poll = data;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
 
-          for (let questionNumber in this.item.questions) {
-            let question = this.item.questions[questionNumber];
-            question.rank = questionNumber;
+function save() {
+  this.loading = true;
+  api
+    .patch("/polls/" + route.params.id, this.item.poll)
+    .then(({ data }) => {
+      let pollId = data.id;
+      let promises = [];
+      this.item.poll = data;
 
-            if (question.id) {
-              if (question.delete) {
-                promises.push(
-                  this.$api
-                    .delete(
-                      "/polls/" + pollId + "/questions/" + question.id,
-                      question
-                    )
-                    .catch((error) => {
-                      console.log(error);
-                    })
-                );
-              } else if (question.update) {
-                promises.push(
-                  this.$api
-                    .patch(
-                      "/polls/" + pollId + "/questions/" + question.id,
-                      question
-                    )
-                    .catch((error) => {
-                      console.log(error);
-                    })
-                );
-              }
-            } else {
-              promises.push(
-                this.$api
-                  .post("/polls/" + pollId + "/questions", question)
-                  .catch((error) => {
-                    console.log(error);
-                  })
-              );
-            }
+      for (let questionNumber in this.item.questions) {
+        let question = this.item.questions[questionNumber];
+        question.rank = questionNumber;
+
+        if (question.id) {
+          if (question.delete) {
+            promises.push(
+              api
+                .delete(
+                  "/polls/" + pollId + "/questions/" + question.id,
+                  question
+                )
+                .catch((error) => {
+                  console.log(error);
+                })
+            );
+          } else if (question.update) {
+            promises.push(
+              api
+                .patch(
+                  "/polls/" + pollId + "/questions/" + question.id,
+                  question
+                )
+                .catch((error) => {
+                  console.log(error);
+                })
+            );
           }
-          Promise.all(promises)
-            .then(() => {
-              this.load().then(() => {
-                this.loading = false;
-              });
-              this.showAlert = true;
-              this.alertType = "green";
-              this.alertMessage = "Changes saved successfully.";
-              setTimeout(() => {
-                this.showAlert = false;
-              }, 5000);
-            })
-            .catch((error) => {
-              console.log(error);
-              this.error = error.response.data;
-              this.loading = false;
-              this.showAlert = true;
-              this.alertType = "warning";
-              this.alertMessage = this.error.message;
-              console.log(error);
-              setTimeout(() => {
-                this.showAlert = false;
-              }, 5000);
-            });
+        } else {
+          promises.push(
+            api
+              .post("/polls/" + pollId + "/questions", question)
+              .catch((error) => {
+                console.log(error);
+              })
+          );
+        }
+      }
+      Promise.all(promises)
+        .then(() => {
+          this.load().then(() => {
+            this.loading = false;
+          });
+          this.showAlert = true;
+          this.alertType = "green";
+          this.alertMessage = "Changes saved successfully.";
+          setTimeout(() => {
+            this.showAlert = false;
+          }, 5000);
         })
         .catch((error) => {
           console.log(error);
@@ -193,24 +177,35 @@ export default {
             this.showAlert = false;
           }, 5000);
         });
-    },
-    copyPollKeyToClipboard() {
-      navigator.clipboard
-        .writeText(
-          process.env.VUE_APP_SITE_URL + "/pollAnswer/" + this.item.poll.pollKey
-        )
-        .then(() => {
-          this.copyToClipboardClass = "green";
-          this.copyToClipboardIcon = "mdi-check";
-          setTimeout(() => {
-            this.copyToClipboardClass = "secondary";
-            this.copyToClipboardIcon = "mdi-share";
-          }, 1500);
-        })
-        .catch(function (err) {
-          console.error("Error al copiar el texto: ", err);
-        });
-    },
-  },
-};
+    })
+    .catch((error) => {
+      console.log(error);
+      this.error = error.response.data;
+      this.loading = false;
+      this.showAlert = true;
+      this.alertType = "warning";
+      this.alertMessage = this.error.message;
+      console.log(error);
+      setTimeout(() => {
+        this.showAlert = false;
+      }, 5000);
+    });
+}
+function copyPollKeyToClipboard() {
+  navigator.clipboard
+    .writeText(
+      process.env.VUE_APP_SITE_URL + "/pollAnswer/" + this.item.poll.pollKey
+    )
+    .then(() => {
+      this.copyToClipboardClass = "green";
+      this.copyToClipboardIcon = "mdi-check";
+      setTimeout(() => {
+        this.copyToClipboardClass = "secondary";
+        this.copyToClipboardIcon = "mdi-share";
+      }, 1500);
+    })
+    .catch(function (err) {
+      console.error("Error al copiar el texto: ", err);
+    });
+}
 </script>
