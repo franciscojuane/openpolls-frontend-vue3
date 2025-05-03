@@ -23,7 +23,7 @@
           <v-tabs-window v-model="tabs">
             <v-tabs-window-item class="pt-4">
               <v-date-picker
-                v-model="dateTime"
+                v-model="date"
                 @input="
                   updateDateTime();
                   slideIfAppropiate();
@@ -34,7 +34,7 @@
 
             <v-tabs-window-item class="pt-4">
               <v-time-picker
-                v-model="dateTime"
+                v-model="time"
                 format="24hr"
                 @input="updateDateTime"
                 scrollable
@@ -56,7 +56,16 @@
 
 <script setup>
 import moment from "moment";
-import { defineProps, ref, shallowRef, computed, watch } from "vue";
+import {
+  defineProps,
+  defineEmits,
+  ref,
+  shallowRef,
+  computed,
+  watch,
+} from "vue";
+
+let emit = defineEmits(["input"]);
 
 const props = defineProps({
   value: String,
@@ -68,30 +77,34 @@ const props = defineProps({
 
 let showDialog = ref(false);
 let date = shallowRef(new Date());
-let time = shallowRef(new Date());
-let dateTime = shallowRef(new Date());
+let time = shallowRef(moment().format("HH:mm"));
 let tabs = ref(0);
 
 let formattedDateTime = computed(() => {
   if (!date.value || !time.value) return "";
-  return moment(`${date.value} ${time}`).format("MM/DD/YYYY HH:mm");
+  return moment(`${date.value}`).format("MM/DD/YYYY") + " " + time.value;
 });
 
 function clearSelection() {
   date.value = null;
   time.value = null;
-  this.$emit("input", null);
+  emit("input", null);
 }
 
 function updateDateTime() {
   if (date.value && time.value) {
-    this.$emit("input", moment(`${date} ${time}`).toISOString());
+    let dateTime = new Date(date.value);
+    let [hours, minutes] = time.value.split(":").map((elem) => Number(elem));
+    dateTime.setHours(hours);
+    dateTime.setMinutes(minutes);
+
+    emit("input", dateTime);
   }
 }
 
 function saveSelection() {
-  this.showDialog.value = false;
-  this.updateDateTime();
+  showDialog.value = false;
+  updateDateTime();
 }
 
 function slideIfAppropiate() {
@@ -105,9 +118,10 @@ function slideIfAppropiate() {
 watch(
   props.value,
   (newValue) => {
+    console.log("newValue " + newValue);
     if (newValue) {
       const m = moment(newValue);
-      date.value = m.format("YYYY-MM-DD");
+      date.value = m.toDate();
       time.value = m.format("HH:mm");
     }
   },
