@@ -19,28 +19,29 @@
             <v-tab>
               <v-icon>mdi-clock</v-icon>
             </v-tab>
-
-            <v-tab-item class="pt-4">
+          </v-tabs>
+          <v-tabs-window v-model="tabs">
+            <v-tabs-window-item class="pt-4">
               <v-date-picker
-                v-model="date"
+                v-model="dateTime"
                 @input="
                   updateDateTime();
                   slideIfAppropiate();
                 "
                 landscape
               ></v-date-picker>
-            </v-tab-item>
+            </v-tabs-window-item>
 
-            <v-tab-item class="pt-4">
+            <v-tabs-window-item class="pt-4">
               <v-time-picker
-                v-model="time"
+                v-model="dateTime"
                 format="24hr"
                 @input="updateDateTime"
                 scrollable
                 landscape
               ></v-time-picker>
-            </v-tab-item>
-          </v-tabs>
+            </v-tabs-window-item>
+          </v-tabs-window>
         </v-card-text>
 
         <v-card-actions>
@@ -53,70 +54,63 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import moment from "moment";
+import { defineProps, ref, shallowRef, computed, watch } from "vue";
 
-export default {
-  props: {
-    value: String,
-    slideOnDateSelection: {
-      type: Boolean,
-      default: true,
-    },
+const props = defineProps({
+  value: String,
+  slideOnDateSelection: {
+    type: Boolean,
+    default: true,
   },
+});
 
-  data: () => ({
-    showDialog: false,
-    date: "",
-    time: "",
-    tabs: 0,
-  }),
+let showDialog = ref(false);
+let date = shallowRef(new Date());
+let time = shallowRef(new Date());
+let dateTime = shallowRef(new Date());
+let tabs = ref(0);
 
-  computed: {
-    formattedDateTime() {
-      if (!this.date || !this.time) return "";
-      return moment(`${this.date} ${this.time}`).format("MM/DD/YYYY HH:mm");
-    },
+let formattedDateTime = computed(() => {
+  if (!date.value || !time.value) return "";
+  return moment(`${date.value} ${time}`).format("MM/DD/YYYY HH:mm");
+});
+
+function clearSelection() {
+  date.value = null;
+  time.value = null;
+  this.$emit("input", null);
+}
+
+function updateDateTime() {
+  if (date.value && time.value) {
+    this.$emit("input", moment(`${date} ${time}`).toISOString());
+  }
+}
+
+function saveSelection() {
+  this.showDialog.value = false;
+  this.updateDateTime();
+}
+
+function slideIfAppropiate() {
+  if (props.slideOnDateSelection) {
+    setTimeout(() => {
+      tabs = 1;
+    }, 200);
+  }
+}
+
+watch(
+  props.value,
+  (newValue) => {
+    if (newValue) {
+      const m = moment(newValue);
+      date.value = m.format("YYYY-MM-DD");
+      time.value = m.format("HH:mm");
+    }
   },
-
-  methods: {
-    clearSelection() {
-      this.date = "";
-      this.time = "";
-      this.$emit("input", null);
-    },
-
-    updateDateTime() {
-      if (this.date && this.time) {
-        this.$emit("input", moment(`${this.date} ${this.time}`).toISOString());
-      }
-    },
-
-    saveSelection() {
-      this.showDialog = false;
-      this.updateDateTime();
-    },
-
-    slideIfAppropiate() {
-      if (this.slideOnDateSelection) {
-        setTimeout(() => {
-          this.tabs = 1;
-        }, 200);
-      }
-    },
-  },
-
-  watch: {
-    value: {
-      immediate: true,
-      handler(newVal) {
-        if (newVal) {
-          const m = moment(newVal);
-          this.date = m.format("YYYY-MM-DD");
-          this.time = m.format("HH:mm");
-        }
-      },
-    },
-  },
-};
+  { immediate: true }
+);
 </script>
