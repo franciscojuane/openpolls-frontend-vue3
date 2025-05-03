@@ -24,7 +24,7 @@
             <v-tabs-window-item class="pt-4">
               <v-date-picker
                 v-model="date"
-                @input="
+                @update:model-value="
                   updateDateTime();
                   slideIfAppropiate();
                 "
@@ -36,7 +36,7 @@
               <v-time-picker
                 v-model="time"
                 format="24hr"
-                @input="updateDateTime"
+                @update="updateDateTime"
                 scrollable
                 landscape
               ></v-time-picker>
@@ -108,9 +108,10 @@ function saveSelection() {
 }
 
 function slideIfAppropiate() {
+  console.log("appropiate?" + props.slideOnDateSelection);
   if (props.slideOnDateSelection) {
     setTimeout(() => {
-      tabs = 1;
+      tabs.value = 1;
     }, 200);
   }
 }
