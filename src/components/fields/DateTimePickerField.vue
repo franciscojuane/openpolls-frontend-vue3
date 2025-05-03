@@ -1,7 +1,10 @@
 <template>
   <div>
     <v-text-field
-      @click="showDialog = true"
+      @click="
+        tabs = 0;
+        showDialog = true;
+      "
       prepend-icon="mdi-calendar"
       readonly
       :value="formattedDateTime"
@@ -23,7 +26,7 @@
           <v-tabs-window v-model="tabs">
             <v-tabs-window-item class="pt-4">
               <v-date-picker
-                v-model="date"
+                v-model="editingDate"
                 @update:model-value="
                   updateDateTime();
                   slideIfAppropiate();
@@ -34,7 +37,7 @@
 
             <v-tabs-window-item class="pt-4">
               <v-time-picker
-                v-model="time"
+                v-model="editingTime"
                 format="24hr"
                 @update="updateDateTime"
                 scrollable
@@ -46,7 +49,7 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="showDialog = false">Cancel</v-btn>
+          <v-btn @click="cancelSelection">Cancel</v-btn>
           <v-btn color="primary" @click="saveSelection">OK</v-btn>
         </v-card-actions>
       </v-card>
@@ -76,6 +79,8 @@ const props = defineProps({
 });
 
 let showDialog = ref(false);
+let editingDate = shallowRef(null);
+let editingTime = shallowRef(null);
 let date = shallowRef(new Date());
 let time = shallowRef(moment().format("HH:mm"));
 let tabs = ref(0);
@@ -104,7 +109,16 @@ function updateDateTime() {
 
 function saveSelection() {
   showDialog.value = false;
+  time.value = editingTime.value;
+  date.value = editingDate.value;
   updateDateTime();
+}
+
+function cancelSelection() {
+  showDialog.value = false;
+
+  editingDate.value = date.value;
+  editingTime.value = time.value;
 }
 
 function slideIfAppropiate() {
@@ -124,6 +138,14 @@ watch(
       const m = moment(newValue);
       date.value = m.toDate();
       time.value = m.format("HH:mm");
+      editingDate.value = date.value;
+      editingTime.value = time.value;
+    } else {
+      let now = moment();
+      editingDate.value = now;
+      editingTime.value = now.format("HH:mm");
+      date.value = null;
+      time.value = null;
     }
   },
   { immediate: true }
