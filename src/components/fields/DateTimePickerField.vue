@@ -122,16 +122,14 @@ function cancelSelection() {
 }
 
 function slideIfAppropiate() {
-  console.log("appropiate?" + props.slideOnDateSelection);
   if (props.slideOnDateSelection) {
     setTimeout(() => {
       tabs.value = 1;
     }, 200);
   }
 }
-
 watch(
-  props.value,
+  () => props.value,
   (newValue) => {
     console.log("newValue " + newValue);
     if (newValue) {
@@ -148,6 +146,6 @@ watch(
       time.value = null;
     }
   },
-  { immediate: true }
+  { immediate: false }
 );
 </script>
