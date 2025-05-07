@@ -56,7 +56,7 @@
                 v-for="(item, index) in internalQuestion.options"
                 :key="index"
                 class="ma-2"
-                close
+                closeable
                 @click:close="removeItem(index)"
               >
                 {{ item }}
@@ -76,44 +76,59 @@
     </v-container>
   </v-form>
 </template>
-<script>
-export default {
-  data: () => ({
-    internalQuestion: {},
-    newItem: "",
-    items: [],
-  }),
-  props: {
-    value: {
-      type: Object,
-      default: () => {},
-    },
-  },
-  watch: {
-    value: {
-      immediate: true,
-      handler(v) {
-        this.internalQuestion = v;
-      },
-    },
-    internalQuestion: {
-      deep: true,
-      handler(v) {
-        this.$emit("value", v);
-        this.$emit("change");
-      },
-    },
-  },
-  methods: {
-    addItem() {
-      if (this.newItem.trim()) {
-        this.internalQuestion.options.push(this.newItem.trim());
-        this.newItem = "";
-      }
-    },
-    removeItem(index) {
-      this.internalQuestion.options.splice(index, 1);
-    },
+<script setup>
+import { reactive, ref, watch, defineProps, defineEmits } from "vue";
+
+let defaultInternalQuestion = {
+  text: "",
+  subText: "",
+  minAmountOfSelections: "",
+  maxAmountOfSelections: "",
+  options: {
+    length: 0,
   },
 };
+
+let emit = defineEmits(["value", "change"]);
+
+let internalQuestion = reactive(defaultInternalQuestion);
+
+let newItem = ref("");
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => {},
+  },
+});
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (!newValue) {
+      Object.assign(internalQuestion, defaultInternalQuestion);
+    } else {
+      Object.assign(internalQuestion, newValue);
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => internalQuestion,
+  (newValue) => {
+    emit("value", newValue);
+    emit("change");
+  },
+  { deep: true }
+);
+
+function addItem() {
+  if (newItem.value.trim()) {
+    internalQuestion.options.push(newItem.value.trim());
+    newItem.value = "";
+  }
+}
+function removeItem(index) {
+  internalQuestion.options.splice(index, 1);
+}
 </script>
