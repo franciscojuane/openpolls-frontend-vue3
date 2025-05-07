@@ -1,17 +1,16 @@
 <template>
   <div class="home">
     <v-container>
-      <v-row v-if="error">
-        <v-col cols="4"></v-col>
-        <v-col cols="4">
-          <v-alert type="error" closable>Access Denied</v-alert></v-col
+      <v-row v-if="error" class="justify-center">
+        <v-col xs="12" sm="10" xl="6">
+          <v-alert type="error" closable
+            >Access Denied: {{ error.message }}</v-alert
+          ></v-col
         >
-        <v-col cols="4"></v-col>
       </v-row>
 
-      <v-row>
-        <v-col cols="4"></v-col>
-        <v-col cols="4"
+      <v-row class="justify-center">
+        <v-col xs="12" sm="10" xl="6"
           ><v-card class="elevation-12"
             ><v-card-title>Login</v-card-title>
             <v-card-text>
@@ -55,7 +54,6 @@
             </v-card-actions>
           </v-card></v-col
         >
-        <v-col cols="4"></v-col>
       </v-row>
     </v-container>
   </div>
@@ -85,9 +83,9 @@ function login() {
     .then(() => {
       router.push("pollList");
     })
-    .catch((error) => {
+    .catch((e) => {
       loading.value = false;
-      error.value = error;
+      error.value = e.response.data;
     });
 }
 onMounted(() => {
