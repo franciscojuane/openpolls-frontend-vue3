@@ -3,9 +3,13 @@ import "vuetify/dist/vuetify.min.css";
 import "vuetify/styles";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
+import { VTimePicker } from "vuetify/labs/VTimePicker";
 
 export default new createVuetify({
-  components,
+  components: {
+    ...components,
+    VTimePicker,
+  },
   directives,
   theme: {
     dark: false,
