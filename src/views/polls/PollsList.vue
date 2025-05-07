@@ -12,6 +12,8 @@
               :items-per-page="itemsPerPage"
               @update:options="loadData"
               :page="currentPage + 1"
+              :mobile="smAndDown"
+              hide-sort
             >
               <template v-slot:top>
                 <v-toolbar
@@ -133,6 +135,9 @@
 <script setup>
 import moment from "moment";
 import { inject, reactive, ref, onMounted } from "vue";
+import { useDisplay } from "vuetify";
+
+const { smAndDown } = useDisplay();
 
 let items = reactive([]);
 let totalItems = ref(0);
@@ -141,19 +146,19 @@ let currentPage = ref(0);
 let showDeleteDialogFlag = ref(false);
 let itemSelectedForDeletion = ref(null);
 let headers = reactive([
-  { value: "name", text: "Poll Name", sortable: false },
-  { value: "description", text: "Poll Description", sortable: false },
-  { value: "amountOfQuestions", text: "Num. of Questions" },
-  { value: "effectiveDate", text: "Effective Date" },
-  { value: "expirationDate", text: "Expiration Date" },
+  { value: "name", title: "Poll Name", sortable: false },
+  { value: "description", title: "Poll Description", sortable: false },
+  { value: "amountOfQuestions", title: "Num. of Questions" },
+  { value: "effectiveDate", title: "Effective Date" },
+  { value: "expirationDate", title: "Expiration Date" },
   {
     value: "status",
-    text: "Status",
+    title: "Status",
     sortable: false,
     align: "center",
   },
 
-  { value: "actions", text: "Actions", align: "right", sortable: false },
+  { value: "actions", title: "Actions", align: "right", sortable: false },
 ]);
 let loading = ref(false);
 let api = inject("api");
