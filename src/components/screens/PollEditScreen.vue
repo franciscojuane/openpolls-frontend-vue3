@@ -220,7 +220,7 @@ let internalPoll = reactive({
 let internalQuestions = ref([]);
 let effectiveQuestions = reactive([]);
 let currentQuestion = ref(1);
-let defaultQuestions = reactive({
+let defaultQuestions = {
   multipleChoice: {
     text: "",
     subText: "",
@@ -251,7 +251,7 @@ let defaultQuestions = reactive({
     minLength: 10,
     maxLength: 255,
   },
-});
+};
 let submissionLimitCriteriaItems = reactive([
   { name: "IP Address", value: "IP" },
   { name: "Email", value: "EMAIL" },
@@ -259,7 +259,6 @@ let submissionLimitCriteriaItems = reactive([
 ]);
 let tabs = ref(0);
 let showDeleteDialogFlag = ref(false);
-let itemSelectedForDeletion = null;
 
 watch(informationFormValid, (v) => {
   emit("valid", v);
@@ -270,8 +269,7 @@ watch(
   (v) => {
     if (v) {
       Object.assign(internalPoll, v.poll);
-
-      Object.assign(internalQuestions.value, v.questions);
+      if (v.questions) internalQuestions.value = [...v.questions];
     } else {
       Object.assign(internalPoll, {
         name: null,
@@ -304,13 +302,8 @@ watch(
   { deep: true }
 );
 
-let currentQuestionObject = computed({
-  get() {
-    return effectiveQuestions[currentQuestion.value - 1];
-  },
-  set(newValue) {
-    Object.assign(effectiveQuestions[currentQuestion.value - 1], newValue);
-  },
+let currentQuestionObject = computed(() => {
+  return effectiveQuestions[currentQuestion.value - 1];
 });
 
 function addQuestion(type) {
@@ -323,12 +316,11 @@ function addQuestion(type) {
   });
 }
 
-function showDeleteDialog(item) {
+function showDeleteDialog() {
   showDeleteDialogFlag.value = true;
-  itemSelectedForDeletion = item;
 }
 function deleteSelectedItem() {
-  itemSelectedForDeletion.delete = true;
+  effectiveQuestions[currentQuestion.value - 1].delete = true;
 }
 
 onMounted(() => {
