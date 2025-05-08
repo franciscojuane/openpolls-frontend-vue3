@@ -40,44 +40,36 @@
     </v-container>
   </v-form>
 </template>
-<script>
-export default {
-  data: () => ({
-    internalQuestion: {},
-    newItem: "",
-    items: [],
-  }),
-  props: {
-    value: {
-      type: Object,
-      default: () => {},
-    },
+<script setup>
+import { defineOptions, defineProps, defineEmits, reactive, watch } from "vue";
+
+defineOptions({
+  name: "TextQuestionEditScreen",
+});
+let internalQuestion = reactive({});
+
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => {},
   },
-  watch: {
-    value: {
-      immediate: true,
-      handler(v) {
-        this.internalQuestion = v;
-      },
-    },
-    internalQuestion: {
-      deep: true,
-      handler(v) {
-        this.$emit("value", v);
-        this.$emit("change");
-      },
-    },
+});
+
+let emit = defineEmits(["update:modelValue", "change"]);
+
+watch(
+  props.modelValue,
+  (v) => {
+    internalQuestion = v;
   },
-  methods: {
-    addItem() {
-      if (this.newItem.trim()) {
-        this.internalQuestion.options.push(this.newItem.trim());
-        this.newItem = "";
-      }
+  { immediate: true }
+),
+  watch(
+    internalQuestion,
+    (v) => {
+      emit("update:modelValue", v);
+      emit("change");
     },
-    removeItem(index) {
-      this.internalQuestion.options.splice(index, 1);
-    },
-  },
-};
+    { deep: true }
+  );
 </script>

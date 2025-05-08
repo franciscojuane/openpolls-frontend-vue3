@@ -79,7 +79,18 @@
   </v-form>
 </template>
 <script setup>
-import { reactive, ref, watch, defineProps, defineEmits } from "vue";
+import {
+  reactive,
+  ref,
+  watch,
+  defineProps,
+  defineOptions,
+  defineEmits,
+} from "vue";
+
+defineOptions({
+  name: "MultipleChoiceQuestionEditScreen",
+});
 
 let defaultInternalQuestion = {
   text: "",
@@ -91,7 +102,7 @@ let defaultInternalQuestion = {
   },
 };
 
-let emit = defineEmits(["value", "change"]);
+let emit = defineEmits(["update:modelValue", "change"]);
 
 let internalQuestion = reactive(defaultInternalQuestion);
 
@@ -116,9 +127,9 @@ watch(
 );
 
 watch(
-  () => internalQuestion,
+  internalQuestion,
   (newValue) => {
-    emit("modelValue", newValue);
+    emit("update:modelValue", newValue);
     emit("change");
   },
   { deep: true }

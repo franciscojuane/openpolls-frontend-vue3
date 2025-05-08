@@ -50,11 +50,15 @@
   </v-form>
 </template>
 <script setup>
-import { defineProps, defineEmits, watch, reactive } from "vue";
+import { defineProps, defineOptions, defineEmits, watch, reactive } from "vue";
 
 let internalQuestion = reactive({});
 
-let emit = defineEmits(["modelValue", "change"]);
+let emit = defineEmits(["update:modelValue", "change"]);
+
+defineOptions({
+  name: "ScaleQuestionEditScreen",
+});
 
 const props = defineProps({
   modelValue: {
@@ -72,7 +76,7 @@ watch(
 watch(
   internalQuestion,
   (v) => {
-    emit("modelValue", v);
+    emit("update:modelValue", v);
     emit("change");
   },
   { deep: true }

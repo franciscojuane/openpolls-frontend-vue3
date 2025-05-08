@@ -47,7 +47,7 @@ defineOptions({
   name: "NumericQuestionEditScreen",
 });
 
-let emit = defineEmits(["modelValue", "change"]);
+let emit = defineEmits(["update:modelValue", "change"]);
 
 let internalQuestion = reactive({});
 
@@ -69,7 +69,7 @@ watch(
 watch(
   internalQuestion,
   (v) => {
-    emit("value", v);
+    emit("update:modelValue", v);
     emit("change");
   },
   { deep: true }
