@@ -47,7 +47,7 @@
               <v-col cols="3">
                 <v-select
                   label="Select limiting criteria"
-                  item-text="name"
+                  item-title="name"
                   item-value="value"
                   v-model="internalPoll.submissionLimitCriteria"
                   :items="submissionLimitCriteriaItems"
@@ -71,8 +71,8 @@
                   ><v-icon>mdi-delete</v-icon></v-btn
                 >
                 <v-menu offset-y>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn class="secondary" v-bind="attrs" v-on="on"
+                  <template v-slot:activator="{ props }">
+                    <v-btn class="secondary" v-bind="props"
                       ><v-icon>mdi-plus</v-icon></v-btn
                     >
                   </template>
@@ -179,164 +179,162 @@
     </v-dialog>
   </v-container>
 </template>
-<script>
+<script setup>
 import DateTimePickerField from "@/components/fields/DateTimePickerField";
 import MultipleChoiceQuestionEditScreen from "@/components/screens/questions/edit/MultipleChoiceQuestionEditScreen";
 import NumericQuestionEditScreen from "@/components/screens/questions/edit/NumericQuestionEditScreen";
 import ScaleQuestionEditScreen from "@/components/screens/questions/edit/ScaleQuestionEditScreen";
 import TextQuestionEditScreen from "@/components/screens/questions/edit/TextQuestionEditScreen";
+import {
+  ref,
+  reactive,
+  onMounted,
+  defineOptions,
+  defineEmits,
+  watch,
+  computed,
+  defineProps,
+  nextTick,
+} from "vue";
 
-export default {
+defineOptions({
   name: "PollEditScreen",
-  components: {
-    DateTimePickerField,
-    MultipleChoiceQuestionEditScreen,
-    NumericQuestionEditScreen,
-    ScaleQuestionEditScreen,
-    TextQuestionEditScreen,
-  },
-  data: () => ({
-    informationFormValid: false,
-    internalPoll: {
-      name: null,
-      description: null,
-      effectiveDate: null,
-      expirationDate: null,
-      submissionLimitCriteria: "NONE",
-    },
-    internalQuestions: [],
-    effectiveQuestions: [],
-    currentQuestionResults: 1,
-    currentQuestion: 1,
-    defaultQuestions: {
-      multipleChoice: {
-        text: "",
-        subText: "",
-        questionType: { name: "MULTIPLE_CHOICE" },
-        minAmountOfSelections: 1,
-        maxAmountOfSelections: 1,
-        options: [],
-      },
-      numeric: {
-        text: "",
-        subText: "",
-        questionType: { name: "NUMERIC" },
-        minValue: 0,
-        maxValue: 100,
-      },
-      scale: {
-        text: "",
-        subText: "",
-        questionType: { name: "SCALE" },
-        minValue: 1,
-        maxValue: 5,
-        scale: 1,
-      },
-      text: {
-        text: "",
-        subText: "",
-        questionType: { name: "TEXT" },
-        minLength: 10,
-        maxLength: 255,
-      },
-    },
-    submissionLimitCriteriaItems: [
-      { name: "IP Address", value: "IP" },
-      { name: "Email", value: "EMAIL" },
-      { name: "No Limit", value: "NONE" },
-    ],
-    tabs: 0,
-    showDeleteDialogFlag: false,
-    itemSelectedForDeletion: null,
-    showStepper: true,
-    stepperKey: 0,
-  }),
-  props: {
-    value: {
-      type: Object,
-    },
-  },
-  watch: {
-    informationFormValid: {
-      immediate: true,
-      handler(v) {
-        this.$emit("valid", v);
-      },
-    },
-    value: {
-      deep: true,
-      handler(v) {
-        if (v) {
-          this.internalPoll = v.poll;
-          this.internalQuestions = v.questions;
-        } else {
-          this.internalPoll = {
-            name: null,
-            description: null,
-            effectiveDate: null,
-            expirationDate: null,
-          };
-          this.internalQuestions = [];
-        }
-      },
-    },
-    internalQuestions: {
-      deep: true,
-      handler() {
-        this.effectiveQuestions = this.internalQuestions.filter(
-          (elem) => !elem.delete
-        );
-      },
-    },
-    fullObject: {
-      deep: true,
-      handler(v) {
-        this.$emit("input", v);
-      },
-    },
-  },
+});
 
-  computed: {
-    fullObject() {
-      return {
-        poll: this.internalPoll,
-        questions: this.internalQuestions,
-      };
-    },
-    isExistingPoll() {
-      return this.internalPoll && this.internalPoll.id;
-    },
-    currentQuestionObject() {
-      return this.effectiveQuestions[this.currentQuestion - 1];
-    },
+const props = defineProps({
+  modelValue: {
+    type: Object,
   },
+});
 
-  methods: {
-    addQuestion(type) {
-      this.internalQuestions.push(
-        JSON.parse(JSON.stringify(this.defaultQuestions[type]))
-      );
-      this.$nextTick(() => {
-        this.currentQuestion = this.internalQuestions.length;
+const emit = defineEmits(["valid", "update:modelValue"]);
+
+let informationFormValid = ref(false);
+let internalPoll = reactive({
+  name: null,
+  description: null,
+  effectiveDate: null,
+  expirationDate: null,
+  submissionLimitCriteria: "NONE",
+});
+let internalQuestions = ref([]);
+let effectiveQuestions = reactive([]);
+let currentQuestion = ref(1);
+let defaultQuestions = reactive({
+  multipleChoice: {
+    text: "",
+    subText: "",
+    questionType: { name: "MULTIPLE_CHOICE" },
+    minAmountOfSelections: 1,
+    maxAmountOfSelections: 1,
+    options: [],
+  },
+  numeric: {
+    text: "",
+    subText: "",
+    questionType: { name: "NUMERIC" },
+    minValue: 0,
+    maxValue: 100,
+  },
+  scale: {
+    text: "",
+    subText: "",
+    questionType: { name: "SCALE" },
+    minValue: 1,
+    maxValue: 5,
+    scale: 1,
+  },
+  text: {
+    text: "",
+    subText: "",
+    questionType: { name: "TEXT" },
+    minLength: 10,
+    maxLength: 255,
+  },
+});
+let submissionLimitCriteriaItems = reactive([
+  { name: "IP Address", value: "IP" },
+  { name: "Email", value: "EMAIL" },
+  { name: "No Limit", value: "NONE" },
+]);
+let tabs = ref(0);
+let showDeleteDialogFlag = ref(false);
+let itemSelectedForDeletion = null;
+
+watch(informationFormValid, (v) => {
+  emit("valid", v);
+});
+
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (v) {
+      Object.assign(internalPoll, v.poll);
+
+      Object.assign(internalQuestions.value, v.questions);
+    } else {
+      Object.assign(internalPoll, {
+        name: null,
+        description: null,
+        effectiveDate: null,
+        expirationDate: null,
+        submissionLimitCriteria: "NONE",
       });
-    },
-    deleteCurrentQuestion() {
-      this.internalQuestions.splice(this.currentQuestion - 1, 1);
-      this.currentQuestion--;
-    },
-    showDeleteDialog(item) {
-      this.showDeleteDialogFlag = true;
-      this.itemSelectedForDeletion = item;
-    },
-    deleteSelectedItem() {
-      this.$set(this.itemSelectedForDeletion, "delete", true);
-    },
-  },
-  created() {
-    if (this.internalQuestions.length == 0) {
-      this.addQuestion("multipleChoice");
-      this.currentQuestion = 1;
+      Object.assign(internalQuestions.value, []);
     }
   },
-};
+  { deep: true }
+);
+watch(
+  internalQuestions,
+  () => {
+    effectiveQuestions = internalQuestions.value.filter((elem) => !elem.delete);
+  },
+  { deep: true }
+);
+
+watch(
+  [internalPoll, () => internalQuestions],
+  () => {
+    emit("update:modelValue", {
+      poll: internalPoll,
+      questions: internalQuestions.value,
+    });
+  },
+  { deep: true }
+);
+
+let currentQuestionObject = computed({
+  get() {
+    return effectiveQuestions[currentQuestion.value - 1];
+  },
+  set(newValue) {
+    Object.assign(effectiveQuestions[currentQuestion.value - 1], newValue);
+  },
+});
+
+function addQuestion(type) {
+  internalQuestions.value.push(
+    JSON.parse(JSON.stringify(defaultQuestions[type]))
+  );
+  nextTick(() => {
+    currentQuestion.value = internalQuestions.value.length;
+    console.log(currentQuestion.value);
+  });
+}
+
+function showDeleteDialog(item) {
+  showDeleteDialogFlag.value = true;
+  itemSelectedForDeletion = item;
+}
+function deleteSelectedItem() {
+  itemSelectedForDeletion.delete = true;
+}
+
+onMounted(() => {
+  if (internalQuestions.value.length == 0) {
+    addQuestion("multipleChoice");
+    currentQuestion.value = 1;
+  }
+});
 </script>
