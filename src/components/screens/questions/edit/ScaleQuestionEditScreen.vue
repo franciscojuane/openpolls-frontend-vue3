@@ -49,44 +49,32 @@
     </v-container>
   </v-form>
 </template>
-<script>
-export default {
-  data: () => ({
-    internalQuestion: {},
-    newItem: "",
-    items: [],
-  }),
-  props: {
-    value: {
-      type: Object,
-      default: () => {},
-    },
+<script setup>
+import { defineProps, defineEmits, watch, reactive } from "vue";
+
+let internalQuestion = reactive({});
+
+let emit = defineEmits(["modelValue", "change"]);
+
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => {},
   },
-  watch: {
-    value: {
-      immediate: true,
-      handler(v) {
-        this.internalQuestion = v;
-      },
-    },
-    internalQuestion: {
-      deep: true,
-      handler(v) {
-        this.$emit("value", v);
-        this.$emit("change");
-      },
-    },
+});
+watch(
+  props.modelValue,
+  (v) => {
+    internalQuestion = v;
   },
-  methods: {
-    addItem() {
-      if (this.newItem.trim()) {
-        this.internalQuestion.options.push(this.newItem.trim());
-        this.newItem = "";
-      }
-    },
-    removeItem(index) {
-      this.internalQuestion.options.splice(index, 1);
-    },
+  { immediate: true }
+);
+watch(
+  internalQuestion,
+  (v) => {
+    emit("modelValue", v);
+    emit("change");
   },
-};
+  { deep: true }
+);
 </script>
