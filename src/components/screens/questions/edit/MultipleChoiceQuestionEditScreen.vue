@@ -118,7 +118,7 @@ watch(
 watch(
   () => internalQuestion,
   (newValue) => {
-    emit("value", newValue);
+    emit("modelValue", newValue);
     emit("change");
   },
   { deep: true }
