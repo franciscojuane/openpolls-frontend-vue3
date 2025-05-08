@@ -38,8 +38,7 @@
         </v-col>
         <v-col cols="6"
           ><v-row>
-            <v-col cols="1"></v-col>
-            <v-col cols="11"
+            <v-col cols="11" offset="1"
               ><v-text-field
                 v-model="newItem"
                 label="Add Element"
@@ -50,16 +49,19 @@
             ></v-col>
           </v-row>
           <v-row>
-            <v-col cols="1"></v-col>
-            <v-col cols="11">
+            <v-col cols="11" offset="1">
               <v-chip
                 v-for="(item, index) in internalQuestion.options"
                 :key="index"
                 class="ma-2"
-                closeable
-                @click:close="removeItem(index)"
               >
                 {{ item }}
+
+                <template #append
+                  ><v-icon class="ml-2" @click="removeItem(index)"
+                    >mdi-close</v-icon
+                  ></template
+                >
               </v-chip>
 
               <v-alert
