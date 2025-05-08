@@ -100,56 +100,77 @@
                 next-icon="mdi-menu-right"
               ></v-pagination>
               <v-container>
-                <v-row>
-                  <v-col cols="3"> </v-col>
+                <v-row class="justify-center">
                   <v-col cols="6"
                     ><v-card class="elevation-3 mt-2 pl-2 pr-2">
                       <v-card-title>Question</v-card-title>
                       <v-card-text>
                         <MultipleChoiceQuestionEditScreen
                           v-if="
-                            currentQuestionObject &&
-                            currentQuestionObject.questionType &&
-                            currentQuestionObject.questionType.name ==
-                              'MULTIPLE_CHOICE'
+                            effectiveQuestions[currentQuestion - 1] &&
+                            effectiveQuestions[currentQuestion - 1]
+                              .questionType &&
+                            effectiveQuestions[currentQuestion - 1].questionType
+                              .name == 'MULTIPLE_CHOICE'
                           "
-                          v-model="currentQuestionObject"
-                          @change="currentQuestionObject.update = true"
+                          v-model="effectiveQuestions[currentQuestion - 1]"
+                          @change="
+                            effectiveQuestions[
+                              currentQuestion.value - 1
+                            ].update = true
+                          "
                         >
                         </MultipleChoiceQuestionEditScreen>
                         <NumericQuestionEditScreen
                           v-if="
-                            currentQuestionObject &&
-                            currentQuestionObject.questionType &&
-                            currentQuestionObject.questionType.name == 'NUMERIC'
+                            effectiveQuestions[currentQuestion - 1] &&
+                            effectiveQuestions[currentQuestion - 1]
+                              .questionType &&
+                            effectiveQuestions[currentQuestion - 1].questionType
+                              .name == 'NUMERIC'
                           "
-                          v-model="currentQuestionObject"
-                          @change="currentQuestionObject.update = true"
+                          v-model="effectiveQuestions[currentQuestion - 1]"
+                          @change="
+                            effectiveQuestions[
+                              currentQuestion.value - 1
+                            ].update = true
+                          "
                         >
                         </NumericQuestionEditScreen>
                         <ScaleQuestionEditScreen
                           v-if="
-                            currentQuestionObject &&
-                            currentQuestionObject.questionType &&
-                            currentQuestionObject.questionType.name == 'SCALE'
+                            effectiveQuestions[currentQuestion - 1] &&
+                            effectiveQuestions[currentQuestion - 1]
+                              .questionType &&
+                            effectiveQuestions[currentQuestion - 1].questionType
+                              .name == 'SCALE'
                           "
-                          v-model="currentQuestionObject"
-                          @change="currentQuestionObject.update = true"
+                          v-model="effectiveQuestions[currentQuestion - 1]"
+                          @change="
+                            effectiveQuestions[
+                              currentQuestion.value - 1
+                            ].update = true
+                          "
                         >
                         </ScaleQuestionEditScreen>
                         <TextQuestionEditScreen
                           v-if="
-                            currentQuestionObject &&
-                            currentQuestionObject.questionType &&
-                            currentQuestionObject.questionType.name == 'TEXT'
+                            effectiveQuestions[currentQuestion - 1] &&
+                            effectiveQuestions[currentQuestion - 1]
+                              .questionType &&
+                            effectiveQuestions[currentQuestion - 1].questionType
+                              .name == 'TEXT'
                           "
-                          v-model="currentQuestionObject"
-                          @change="currentQuestionObject.update = true"
+                          v-model="effectiveQuestions[currentQuestion - 1]"
+                          @change="
+                            effectiveQuestions[
+                              currentQuestion.value - 1
+                            ].update = true
+                          "
                         >
                         </TextQuestionEditScreen>
                       </v-card-text> </v-card
                   ></v-col>
-                  <v-col cols="3"> </v-col>
                 </v-row>
               </v-container>
             </v-card-text>
@@ -192,7 +213,6 @@ import {
   defineOptions,
   defineEmits,
   watch,
-  computed,
   defineProps,
   nextTick,
 } from "vue";
@@ -301,10 +321,6 @@ watch(
   },
   { deep: true }
 );
-
-let currentQuestionObject = computed(() => {
-  return effectiveQuestions[currentQuestion.value - 1];
-});
 
 function addQuestion(type) {
   internalQuestions.value.push(
