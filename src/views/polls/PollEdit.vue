@@ -7,7 +7,7 @@
             <v-toolbar flat color="white">
               <v-toolbar-title>Edit poll</v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-tooltip top>
+              <v-tooltip location="top">
                 <template v-slot:activator="{ props }">
                   <v-btn
                     :loading="loading"
@@ -20,7 +20,7 @@
                 </template>
                 Save
               </v-tooltip>
-              <v-tooltip top>
+              <v-tooltip location="top">
                 <template v-slot:activator="{ props }">
                   <v-btn
                     @click="copyPollKeyToClipboard()"

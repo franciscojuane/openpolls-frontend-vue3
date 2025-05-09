@@ -59,118 +59,101 @@
       <v-tabs-window-item>
         <v-container>
           <v-card>
-            <v-card-title>
-              <v-row>
-                <v-spacer></v-spacer>
-                <v-btn
-                  :disabled="internalQuestions.length == 1"
-                  @click="
-                    showDeleteDialog(effectiveQuestions[currentQuestion - 1])
-                  "
-                  class="secondary mr-2"
-                  ><v-icon>mdi-delete</v-icon></v-btn
-                >
-                <v-menu offset-y>
-                  <template v-slot:activator="{ props }">
-                    <v-btn class="secondary" v-bind="props"
-                      ><v-icon>mdi-plus</v-icon></v-btn
-                    >
-                  </template>
-                  <v-list>
-                    <v-list-item @click="addQuestion('multipleChoice')"
-                      >Multiple Choice</v-list-item
-                    >
-                    <v-list-item @click="addQuestion('numeric')"
-                      >Numeric</v-list-item
-                    >
-                    <v-list-item @click="addQuestion('scale')"
-                      >Scale</v-list-item
-                    >
-                    <v-list-item @click="addQuestion('text')">Text</v-list-item>
-                  </v-list>
-                </v-menu>
-              </v-row>
-            </v-card-title>
-
             <v-card-text>
-              <v-pagination
-                v-model="currentQuestion"
-                :length="effectiveQuestions.length"
-                prev-icon="mdi-menu-left"
-                next-icon="mdi-menu-right"
-              ></v-pagination>
               <v-container>
-                <v-row class="justify-center">
+                <v-row
+                  class="justify-center"
+                  v-for="(object, index) in effectiveQuestions"
+                  :key="index"
+                >
                   <v-col cols="6"
                     ><v-card class="elevation-3 mt-2 pl-2 pr-2">
-                      <v-card-title>Question</v-card-title>
+                      <v-card-title>Question # {{ index + 1 }}</v-card-title>
                       <v-card-text>
                         <MultipleChoiceQuestionEditScreen
                           v-if="
-                            effectiveQuestions[currentQuestion - 1] &&
-                            effectiveQuestions[currentQuestion - 1]
-                              .questionType &&
-                            effectiveQuestions[currentQuestion - 1].questionType
-                              .name == 'MULTIPLE_CHOICE'
+                            effectiveQuestions[index] &&
+                            effectiveQuestions[index].questionType &&
+                            effectiveQuestions[index].questionType.name ==
+                              'MULTIPLE_CHOICE'
                           "
-                          v-model="effectiveQuestions[currentQuestion - 1]"
-                          @change="
-                            effectiveQuestions[
-                              currentQuestion - 1
-                            ].update = true
-                          "
+                          v-model="effectiveQuestions[index]"
+                          @change="effectiveQuestions[index].update = true"
                         >
                         </MultipleChoiceQuestionEditScreen>
                         <NumericQuestionEditScreen
                           v-if="
-                            effectiveQuestions[currentQuestion - 1] &&
-                            effectiveQuestions[currentQuestion - 1]
-                              .questionType &&
-                            effectiveQuestions[currentQuestion - 1].questionType
-                              .name == 'NUMERIC'
+                            effectiveQuestions[index] &&
+                            effectiveQuestions[index].questionType &&
+                            effectiveQuestions[index].questionType.name ==
+                              'NUMERIC'
                           "
-                          v-model="effectiveQuestions[currentQuestion - 1]"
-                          @change="
-                            effectiveQuestions[
-                              currentQuestion - 1
-                            ].update = true
-                          "
+                          v-model="effectiveQuestions[index]"
+                          @change="effectiveQuestions[index].update = true"
                         >
                         </NumericQuestionEditScreen>
                         <ScaleQuestionEditScreen
                           v-if="
-                            effectiveQuestions[currentQuestion - 1] &&
-                            effectiveQuestions[currentQuestion - 1]
-                              .questionType &&
-                            effectiveQuestions[currentQuestion - 1].questionType
-                              .name == 'SCALE'
+                            effectiveQuestions[index] &&
+                            effectiveQuestions[index].questionType &&
+                            effectiveQuestions[index].questionType.name ==
+                              'SCALE'
                           "
-                          v-model="effectiveQuestions[currentQuestion - 1]"
-                          @change="
-                            effectiveQuestions[
-                              currentQuestion - 1
-                            ].update = true
-                          "
+                          v-model="effectiveQuestions[index]"
+                          @change="effectiveQuestions[index].update = true"
                         >
                         </ScaleQuestionEditScreen>
                         <TextQuestionEditScreen
                           v-if="
-                            effectiveQuestions[currentQuestion - 1] &&
-                            effectiveQuestions[currentQuestion - 1]
-                              .questionType &&
-                            effectiveQuestions[currentQuestion - 1].questionType
-                              .name == 'TEXT'
+                            effectiveQuestions[index] &&
+                            effectiveQuestions[index].questionType &&
+                            effectiveQuestions[index].questionType.name ==
+                              'TEXT'
                           "
-                          v-model="effectiveQuestions[currentQuestion - 1]"
-                          @change="
-                            effectiveQuestions[
-                              currentQuestion - 1
-                            ].update = true
-                          "
+                          v-model="effectiveQuestions[index]"
+                          @change="effectiveQuestions[index].update = true"
                         >
                         </TextQuestionEditScreen>
-                      </v-card-text> </v-card
-                  ></v-col>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-tooltip location="top">
+                          <template v-slot:activator="{ props }">
+                            <v-btn
+                              :disabled="internalQuestions.length == 1"
+                              @click="showDeleteDialog(index)"
+                              v-bind="props"
+                              class="secondary mr-2"
+                              ><v-icon>mdi-delete</v-icon></v-btn
+                            >
+                          </template>
+                          Delete
+                        </v-tooltip>
+                        <v-menu offset-y>
+                          <template v-slot:activator="{ props }">
+                            <v-btn class="secondary" v-bind="props"
+                              ><v-icon>mdi-plus</v-icon></v-btn
+                            >
+                          </template>
+                          <v-list>
+                            <v-list-item
+                              @click="addQuestion('multipleChoice', index)"
+                              >Multiple Choice</v-list-item
+                            >
+                            <v-list-item @click="addQuestion('numeric', index)"
+                              >Numeric</v-list-item
+                            >
+                            <v-list-item @click="addQuestion('scale', index)"
+                              >Scale</v-list-item
+                            >
+                            <v-list-item @click="addQuestion('text', index)"
+                              >Text</v-list-item
+                            >
+                          </v-list>
+                        </v-menu>
+                      </v-card-actions>
+                    </v-card></v-col
+                  >
                 </v-row>
               </v-container>
             </v-card-text>
@@ -214,7 +197,6 @@ import {
   defineEmits,
   watch,
   defineProps,
-  nextTick,
 } from "vue";
 
 defineOptions({
@@ -238,8 +220,8 @@ let internalPoll = reactive({
   submissionLimitCriteria: "NONE",
 });
 let internalQuestions = ref([]);
-let effectiveQuestions = reactive([]);
-let currentQuestion = ref(1);
+let effectiveQuestions = ref([]);
+let selectedIndexForDeletion = 0;
 let defaultQuestions = {
   multipleChoice: {
     text: "",
@@ -306,7 +288,9 @@ watch(
 watch(
   internalQuestions,
   () => {
-    effectiveQuestions = internalQuestions.value.filter((elem) => !elem.delete);
+    effectiveQuestions.value = internalQuestions.value.filter(
+      (elem) => !elem.delete
+    );
   },
   { deep: true }
 );
@@ -322,28 +306,25 @@ watch(
   { deep: true }
 );
 
-function addQuestion(type) {
-  internalQuestions.value.push(
+function addQuestion(type, index) {
+  internalQuestions.value.splice(
+    index + 1,
+    0,
     JSON.parse(JSON.stringify(defaultQuestions[type]))
   );
-  nextTick(() => {
-    currentQuestion.value = internalQuestions.value.length;
-  });
 }
 
-function showDeleteDialog() {
+function showDeleteDialog(index) {
   showDeleteDialogFlag.value = true;
+  selectedIndexForDeletion = index;
 }
 function deleteSelectedItem() {
-  effectiveQuestions[currentQuestion.value - 1].delete = true;
-  if (currentQuestion.value == effectiveQuestions.length)
-    currentQuestion.value--;
+  effectiveQuestions.value[selectedIndexForDeletion].delete = true;
 }
 
 onMounted(() => {
   if (internalQuestions.value.length == 0) {
     addQuestion("multipleChoice");
-    currentQuestion.value = 1;
   }
 });
 </script>
