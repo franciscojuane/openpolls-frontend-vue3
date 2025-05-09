@@ -64,7 +64,7 @@
                 <v-row
                   class="justify-center"
                   v-for="(object, index) in effectiveQuestions"
-                  :key="index"
+                  :key="object.id"
                 >
                   <v-col cols="6"
                     ><v-card class="elevation-3 mt-2 pl-2 pr-2">
@@ -72,10 +72,9 @@
                       <v-card-text>
                         <MultipleChoiceQuestionEditScreen
                           v-if="
-                            effectiveQuestions[index] &&
-                            effectiveQuestions[index].questionType &&
-                            effectiveQuestions[index].questionType.name ==
-                              'MULTIPLE_CHOICE'
+                            object &&
+                            object.questionType &&
+                            object.questionType.name == 'MULTIPLE_CHOICE'
                           "
                           v-model="effectiveQuestions[index]"
                           @change="effectiveQuestions[index].update = true"
@@ -83,10 +82,9 @@
                         </MultipleChoiceQuestionEditScreen>
                         <NumericQuestionEditScreen
                           v-if="
-                            effectiveQuestions[index] &&
-                            effectiveQuestions[index].questionType &&
-                            effectiveQuestions[index].questionType.name ==
-                              'NUMERIC'
+                            object &&
+                            object.questionType &&
+                            object.questionType.name == 'NUMERIC'
                           "
                           v-model="effectiveQuestions[index]"
                           @change="effectiveQuestions[index].update = true"
@@ -94,10 +92,9 @@
                         </NumericQuestionEditScreen>
                         <ScaleQuestionEditScreen
                           v-if="
-                            effectiveQuestions[index] &&
-                            effectiveQuestions[index].questionType &&
-                            effectiveQuestions[index].questionType.name ==
-                              'SCALE'
+                            object &&
+                            object.questionType &&
+                            object.questionType.name == 'SCALE'
                           "
                           v-model="effectiveQuestions[index]"
                           @change="effectiveQuestions[index].update = true"
@@ -105,10 +102,9 @@
                         </ScaleQuestionEditScreen>
                         <TextQuestionEditScreen
                           v-if="
-                            effectiveQuestions[index] &&
-                            effectiveQuestions[index].questionType &&
-                            effectiveQuestions[index].questionType.name ==
-                              'TEXT'
+                            object &&
+                            object.questionType &&
+                            object.questionType.name == 'TEXT'
                           "
                           v-model="effectiveQuestions[index]"
                           @change="effectiveQuestions[index].update = true"
@@ -230,6 +226,7 @@ let defaultQuestions = {
     minAmountOfSelections: 1,
     maxAmountOfSelections: 1,
     options: [],
+    id: crypto.randomUUID(),
   },
   numeric: {
     text: "",
@@ -237,6 +234,7 @@ let defaultQuestions = {
     questionType: { name: "NUMERIC" },
     minValue: 0,
     maxValue: 100,
+    id: crypto.randomUUID(),
   },
   scale: {
     text: "",
@@ -245,6 +243,7 @@ let defaultQuestions = {
     minValue: 1,
     maxValue: 5,
     scale: 1,
+    id: crypto.randomUUID(),
   },
   text: {
     text: "",
@@ -252,6 +251,7 @@ let defaultQuestions = {
     questionType: { name: "TEXT" },
     minLength: 10,
     maxLength: 255,
+    id: crypto.randomUUID(),
   },
 };
 let submissionLimitCriteriaItems = reactive([
