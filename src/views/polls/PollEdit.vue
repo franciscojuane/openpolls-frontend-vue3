@@ -53,7 +53,7 @@
 
 <script setup>
 import PollEditScreen from "@/components/screens/PollEditScreen";
-import { reactive, ref, onMounted, inject, defineOptions } from "vue";
+import { ref, onMounted, inject, defineOptions } from "vue";
 import { useRoute } from "vue-router";
 
 defineOptions({
@@ -64,7 +64,7 @@ const api = inject("api");
 const auth = inject("auth");
 const route = useRoute();
 
-const item = reactive({});
+const item = ref({});
 const valid = ref(false);
 const showAlert = ref(false);
 const alertType = ref("warning");
@@ -109,8 +109,8 @@ function load() {
       console.log(error);
     });
 }
-
 function save() {
+  console.log(JSON.stringify(item.questions));
   loading.value = true;
   api
     .patch("/polls/" + route.params.id, item.poll)
@@ -148,13 +148,15 @@ function save() {
             );
           }
         } else {
-          promises.push(
-            api
-              .post("/polls/" + pollId + "/questions", question)
-              .catch((error) => {
-                console.log(error);
-              })
-          );
+          if (!question.delete) {
+            promises.push(
+              api
+                .post("/polls/" + pollId + "/questions", question)
+                .catch((error) => {
+                  console.log(error);
+                })
+            );
+          }
         }
       }
       Promise.all(promises)

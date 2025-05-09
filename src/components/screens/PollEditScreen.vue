@@ -116,7 +116,7 @@
                           v-model="effectiveQuestions[currentQuestion - 1]"
                           @change="
                             effectiveQuestions[
-                              currentQuestion.value - 1
+                              currentQuestion - 1
                             ].update = true
                           "
                         >
@@ -132,7 +132,7 @@
                           v-model="effectiveQuestions[currentQuestion - 1]"
                           @change="
                             effectiveQuestions[
-                              currentQuestion.value - 1
+                              currentQuestion - 1
                             ].update = true
                           "
                         >
@@ -148,7 +148,7 @@
                           v-model="effectiveQuestions[currentQuestion - 1]"
                           @change="
                             effectiveQuestions[
-                              currentQuestion.value - 1
+                              currentQuestion - 1
                             ].update = true
                           "
                         >
@@ -164,7 +164,7 @@
                           v-model="effectiveQuestions[currentQuestion - 1]"
                           @change="
                             effectiveQuestions[
-                              currentQuestion.value - 1
+                              currentQuestion - 1
                             ].update = true
                           "
                         >
@@ -328,7 +328,6 @@ function addQuestion(type) {
   );
   nextTick(() => {
     currentQuestion.value = internalQuestions.value.length;
-    console.log(currentQuestion.value);
   });
 }
 
@@ -337,6 +336,8 @@ function showDeleteDialog() {
 }
 function deleteSelectedItem() {
   effectiveQuestions[currentQuestion.value - 1].delete = true;
+  if (currentQuestion.value == effectiveQuestions.length)
+    currentQuestion.value--;
 }
 
 onMounted(() => {
