@@ -53,7 +53,7 @@
 
 <script setup>
 import PollEditScreen from "@/components/screens/PollEditScreen";
-import { ref, onMounted, inject, defineOptions } from "vue";
+import { ref, onMounted, inject, defineOptions, reactive } from "vue";
 import { useRoute } from "vue-router";
 
 defineOptions({
@@ -64,7 +64,7 @@ const api = inject("api");
 const auth = inject("auth");
 const route = useRoute();
 
-const item = ref({});
+const item = reactive({});
 const valid = ref(false);
 const showAlert = ref(false);
 const alertType = ref("warning");
