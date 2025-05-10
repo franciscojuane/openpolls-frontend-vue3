@@ -54,7 +54,7 @@ export default {
           let newQuestions = [];
           for (let questionNumber in this.item.questions) {
             let question = this.item.questions[questionNumber];
-            question.rank = questionNumber;
+            //question.rank = questionNumber;
             if (question.id) {
               promises.push(
                 this.$api

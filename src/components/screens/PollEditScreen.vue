@@ -64,7 +64,7 @@
                 <v-row
                   class="justify-center"
                   v-for="(object, index) in effectiveQuestions"
-                  :key="object.id"
+                  :key="object.key"
                 >
                   <v-col cols="6"
                     ><v-card class="elevation-3 mt-2 pl-2 pr-2">
@@ -76,8 +76,13 @@
                             object.questionType &&
                             object.questionType.name == 'MULTIPLE_CHOICE'
                           "
-                          v-model="effectiveQuestions[index]"
-                          @change="effectiveQuestions[index].update = true"
+                          :modelValue="effectiveQuestions[index]"
+                          @update:modelValue="
+                            store.commit('updateQuestion', {
+                              question: $event,
+                              index,
+                            })
+                          "
                         >
                         </MultipleChoiceQuestionEditScreen>
                         <NumericQuestionEditScreen
@@ -86,8 +91,13 @@
                             object.questionType &&
                             object.questionType.name == 'NUMERIC'
                           "
-                          v-model="effectiveQuestions[index]"
-                          @change="effectiveQuestions[index].update = true"
+                          :modelValue="effectiveQuestions[index]"
+                          @update:modelValue="
+                            store.commit('updateQuestion', {
+                              question: $event,
+                              index,
+                            })
+                          "
                         >
                         </NumericQuestionEditScreen>
                         <ScaleQuestionEditScreen
@@ -96,8 +106,13 @@
                             object.questionType &&
                             object.questionType.name == 'SCALE'
                           "
-                          v-model="effectiveQuestions[index]"
-                          @change="effectiveQuestions[index].update = true"
+                          :modelValue="effectiveQuestions[index]"
+                          @update:modelValue="
+                            store.commit('updateQuestion', {
+                              question: $event,
+                              index,
+                            })
+                          "
                         >
                         </ScaleQuestionEditScreen>
                         <TextQuestionEditScreen
@@ -106,8 +121,13 @@
                             object.questionType &&
                             object.questionType.name == 'TEXT'
                           "
-                          v-model="effectiveQuestions[index]"
-                          @change="effectiveQuestions[index].update = true"
+                          :modelValue="effectiveQuestions[index]"
+                          @update:modelValue="
+                            store.commit('updateQuestion', {
+                              question: $event,
+                              index,
+                            })
+                          "
                         >
                         </TextQuestionEditScreen>
                       </v-card-text>
@@ -133,16 +153,18 @@
                           </template>
                           <v-list>
                             <v-list-item
-                              @click="addQuestion('multipleChoice', index)"
+                              @click="addQuestion('multipleChoice', index + 1)"
                               >Multiple Choice</v-list-item
                             >
-                            <v-list-item @click="addQuestion('numeric', index)"
+                            <v-list-item
+                              @click="addQuestion('numeric', index + 1)"
                               >Numeric</v-list-item
                             >
-                            <v-list-item @click="addQuestion('scale', index)"
+                            <v-list-item
+                              @click="addQuestion('scale', index + 1)"
                               >Scale</v-list-item
                             >
-                            <v-list-item @click="addQuestion('text', index)"
+                            <v-list-item @click="addQuestion('text', index + 1)"
                               >Text</v-list-item
                             >
                           </v-list>
@@ -185,9 +207,12 @@ import MultipleChoiceQuestionEditScreen from "@/components/screens/questions/edi
 import NumericQuestionEditScreen from "@/components/screens/questions/edit/NumericQuestionEditScreen";
 import ScaleQuestionEditScreen from "@/components/screens/questions/edit/ScaleQuestionEditScreen";
 import TextQuestionEditScreen from "@/components/screens/questions/edit/TextQuestionEditScreen";
+
+import { useStore } from "vuex";
 import {
   ref,
   reactive,
+  computed,
   onMounted,
   defineOptions,
   defineEmits,
@@ -206,17 +231,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["valid", "update:modelValue"]);
+let store = useStore();
 
 let informationFormValid = ref(false);
-let internalPoll = reactive({
-  name: null,
-  description: null,
-  effectiveDate: null,
-  expirationDate: null,
-  submissionLimitCriteria: "NONE",
+
+let internalPoll = computed(() => {
+  return store.getters.poll;
 });
-let internalQuestions = ref([]);
-let effectiveQuestions = ref([]);
+
+let internalQuestions = computed(() => {
+  return store.getters.questions;
+});
+
+let effectiveQuestions = computed(() => {
+  return store.getters.effectiveQuestions;
+});
+
 let selectedIndexForDeletion = 0;
 let defaultQuestions = {
   multipleChoice: {
@@ -226,7 +256,7 @@ let defaultQuestions = {
     minAmountOfSelections: 1,
     maxAmountOfSelections: 1,
     options: [],
-    id: crypto.randomUUID(),
+    key: crypto.randomUUID(),
   },
   numeric: {
     text: "",
@@ -234,7 +264,7 @@ let defaultQuestions = {
     questionType: { name: "NUMERIC" },
     minValue: 0,
     maxValue: 100,
-    id: crypto.randomUUID(),
+    key: crypto.randomUUID(),
   },
   scale: {
     text: "",
@@ -243,7 +273,7 @@ let defaultQuestions = {
     minValue: 1,
     maxValue: 5,
     scale: 1,
-    id: crypto.randomUUID(),
+    key: crypto.randomUUID(),
   },
   text: {
     text: "",
@@ -251,7 +281,7 @@ let defaultQuestions = {
     questionType: { name: "TEXT" },
     minLength: 10,
     maxLength: 255,
-    id: crypto.randomUUID(),
+    key: crypto.randomUUID(),
   },
 };
 let submissionLimitCriteriaItems = reactive([
@@ -271,7 +301,7 @@ watch(
   (v) => {
     if (v) {
       Object.assign(internalPoll, v.poll);
-      if (v.questions) internalQuestions.value = [...v.questions];
+      if (v.questions) internalQuestions = [...v.questions];
     } else {
       Object.assign(internalPoll, {
         name: null,
@@ -280,38 +310,17 @@ watch(
         expirationDate: null,
         submissionLimitCriteria: "NONE",
       });
-      Object.assign(internalQuestions.value, []);
+      Object.assign(internalQuestions, []);
     }
-  },
-  { deep: true }
-);
-watch(
-  internalQuestions,
-  () => {
-    effectiveQuestions.value = internalQuestions.value.filter(
-      (elem) => !elem.delete
-    );
-  },
-  { deep: true }
-);
-
-watch(
-  [internalPoll, () => internalQuestions],
-  () => {
-    emit("update:modelValue", {
-      poll: internalPoll,
-      questions: internalQuestions.value,
-    });
   },
   { deep: true }
 );
 
 function addQuestion(type, index) {
-  internalQuestions.value.splice(
-    index + 1,
-    0,
-    JSON.parse(JSON.stringify(defaultQuestions[type]))
-  );
+  store.commit("addQuestionAtIndex", {
+    question: JSON.parse(JSON.stringify(defaultQuestions[type])),
+    index,
+  });
 }
 
 function showDeleteDialog(index) {
@@ -323,7 +332,7 @@ function deleteSelectedItem() {
 }
 
 onMounted(() => {
-  if (internalQuestions.value.length == 0) {
+  if (internalQuestions.length == 0) {
     addQuestion("multipleChoice");
   }
 });

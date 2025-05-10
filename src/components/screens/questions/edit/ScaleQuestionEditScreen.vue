@@ -76,8 +76,8 @@ watch(
 watch(
   internalQuestion,
   (v) => {
+    internalQuestion.update = true;
     emit("update:modelValue", v);
-    emit("change");
   },
   { deep: true }
 );

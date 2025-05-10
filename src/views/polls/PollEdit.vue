@@ -5,7 +5,15 @@
         <v-card class="elevation-12">
           <v-card-title>
             <v-toolbar flat color="white">
-              <v-toolbar-title>Edit poll</v-toolbar-title>
+              <v-toolbar-title
+                ><v-toolbar
+                  flat
+                  color="white"
+                  title="Edit Poll"
+                  density="compact"
+                  class="text-start"
+                ></v-toolbar
+              ></v-toolbar-title>
               <v-spacer></v-spacer>
               <v-tooltip location="top">
                 <template v-slot:activator="{ props }">
@@ -55,14 +63,15 @@
 import PollEditScreen from "@/components/screens/PollEditScreen";
 import { ref, onMounted, inject, defineOptions, reactive } from "vue";
 import { useRoute } from "vue-router";
+import { useStore } from "vuex";
 
 defineOptions({
   name: "PollEdit",
 });
 
-const api = inject("api");
 const auth = inject("auth");
 const route = useRoute();
+const store = useStore();
 
 const item = reactive({});
 const valid = ref(false);
@@ -86,103 +95,23 @@ onMounted(() => {
 });
 
 function load() {
-  return api
-    .get("/polls/" + route.params.id)
-    .then(({ data }) => {
-      item.poll = data;
-      api
-        .get("/polls/" + route.params.id + "/questions")
-        .then(({ data }) => {
-          item.questions = data;
-        })
-        .catch((error) => {
-          showAlert.value = true;
-          alertType.value = "warning";
-          alertMessage.value = "Error happened while loading data.";
-          console.log(error);
-          setTimeout(() => {
-            showAlert.value = false;
-          }, 5000);
-        });
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  loading.value = true;
+  store.dispatch("loadPoll", { pollId: route.params.id }).then(() => {
+    loading.value = false;
+  });
 }
 function save() {
-  console.log(JSON.stringify(item.questions));
   loading.value = true;
-  api
-    .patch("/polls/" + route.params.id, item.poll)
-    .then(({ data }) => {
-      let pollId = data.id;
-      let promises = [];
-      item.poll = data;
-
-      for (let questionNumber in item.questions) {
-        let question = item.questions[questionNumber];
-        question.rank = questionNumber;
-
-        if (question.id) {
-          if (question.delete) {
-            promises.push(
-              api
-                .delete(
-                  "/polls/" + pollId + "/questions/" + question.id,
-                  question
-                )
-                .catch((error) => {
-                  console.log(error);
-                })
-            );
-          } else if (question.update) {
-            promises.push(
-              api
-                .patch(
-                  "/polls/" + pollId + "/questions/" + question.id,
-                  question
-                )
-                .catch((error) => {
-                  console.log(error);
-                })
-            );
-          }
-        } else {
-          if (!question.delete) {
-            promises.push(
-              api
-                .post("/polls/" + pollId + "/questions", question)
-                .catch((error) => {
-                  console.log(error);
-                })
-            );
-          }
-        }
-      }
-      Promise.all(promises)
-        .then(() => {
-          load().then(() => {
-            loading.value = false;
-          });
-          showAlert.value = true;
-          alertType.value = "green";
-          alertMessage.value = "Changes saved successfully.";
-          setTimeout(() => {
-            showAlert.value = false;
-          }, 5000);
-        })
-        .catch((error) => {
-          console.log(error);
-          error = error.response.data;
-          loading.value = false;
-          showAlert.value = true;
-          alertType.value = "warning";
-          alertMessage.value = error.message;
-          console.log(error);
-          setTimeout(() => {
-            showAlert.value = false;
-          }, 5000);
-        });
+  store
+    .dispatch("savePoll")
+    .then(() => {
+      loading.value = false;
+      showAlert.value = true;
+      alertType.value = "green";
+      alertMessage.value = "Changes saved successfully.";
+      setTimeout(() => {
+        showAlert.value = false;
+      }, 5000);
     })
     .catch((error) => {
       console.log(error);
@@ -200,7 +129,7 @@ function save() {
 function copyPollKeyToClipboard() {
   navigator.clipboard
     .writeText(
-      process.env.VUE_APP_SITE_URL + "/pollAnswer/" + item.poll.pollKey
+      process.env.VUE_APP_SITE_URL + "/pollAnswer/" + store.getters.poll.pollKey
     )
     .then(() => {
       copyToClipboardClass.value = "green";

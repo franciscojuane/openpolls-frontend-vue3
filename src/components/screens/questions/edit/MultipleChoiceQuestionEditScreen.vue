@@ -92,6 +92,13 @@ defineOptions({
   name: "MultipleChoiceQuestionEditScreen",
 });
 
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => {},
+  },
+});
+
 let defaultInternalQuestion = {
   text: "",
   subText: "",
@@ -104,17 +111,15 @@ let defaultInternalQuestion = {
 
 let emit = defineEmits(["update:modelValue", "change"]);
 
-let internalQuestion = reactive(defaultInternalQuestion);
+let internalQuestion = reactive(
+  props.modelValue
+    ? JSON.parse(JSON.stringify(props.modelValue))
+    : defaultInternalQuestion
+);
 
 let newItem = ref("");
-const props = defineProps({
-  modelValue: {
-    type: Object,
-    default: () => {},
-  },
-});
 
-watch(
+/*watch(
   () => props.modelValue,
   (newValue) => {
     if (!newValue) {
@@ -124,13 +129,13 @@ watch(
     }
   },
   { immediate: true }
-);
+);*/
 
 watch(
   internalQuestion,
   (newValue) => {
+    internalQuestion.update = true;
     emit("update:modelValue", newValue);
-    emit("change");
   },
   { deep: true }
 );
