@@ -53,11 +53,9 @@
                   :items="submissionLimitCriteriaItems"
                   :rules="[(v) => !!v || 'Required']"
                 ></v-select>
-                <v-btn @click="validate">asdasd</v-btn>
               </v-col>
-            </v-row>
-          </v-form></v-card-text
-        >
+            </v-row> </v-form
+        ></v-card-text>
       </v-tabs-window-item>
       <v-tabs-window-item>
         <v-container>
@@ -339,12 +337,4 @@ onMounted(() => {
     addQuestion("multipleChoice");
   }
 });
-
-let formRef = ref(null);
-
-async function validate() {
-  let { valid, errors } = await formRef.value.validate();
-  console.log(valid); // false si algo falla
-  console.log(errors);
-}
 </script>
