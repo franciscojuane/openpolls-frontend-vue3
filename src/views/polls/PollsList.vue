@@ -9,7 +9,7 @@
               :itemsLength="totalItems"
               :headers="headers"
               :loading="loading"
-              :items-per-page="itemsPerPage"
+              v-model:items-per-page="itemsPerPage"
               @update:options="loadData"
               :page="currentPage + 1"
               :mobile="smAndDown"
@@ -200,11 +200,13 @@ function loadData() {
 }
 function showDeleteDialog(item) {
   showDeleteDialogFlag.value = true;
-  itemSelectedForDeletion = item;
+  itemSelectedForDeletion.value = item;
 }
 function deleteSelectedItem() {
-  return api.delete("/polls/" + itemSelectedForDeletion.id).catch((error) => {
-    console.log(error);
-  });
+  return api
+    .delete("/polls/" + itemSelectedForDeletion.value.id)
+    .catch((error) => {
+      console.log(error);
+    });
 }
 </script>

@@ -68,11 +68,11 @@ function save() {
     })
     .catch((error) => {
       console.log(error);
-      error = error.response.data;
+      error = error?.response?.data;
       loading.value = false;
       showAlert.value = true;
       alertType.value = "warning";
-      alertMessage.value = error.message;
+      alertMessage.value = error?.message;
       console.log(error);
       setTimeout(() => {
         showAlert.value = false;

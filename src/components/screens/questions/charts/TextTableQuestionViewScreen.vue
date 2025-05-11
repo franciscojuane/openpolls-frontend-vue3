@@ -3,7 +3,7 @@
     <v-data-table
       :items="textTableItems"
       :headers="[{ text: 'Answer', value: 'answerText' }]"
-      :options.sync="paginationOptions"
+      v-model:options="paginationOptions"
       :server-items-length="totalTextItems"
       :loading="loading"
     >

@@ -14,7 +14,10 @@
             <v-tabs v-model="tabs">
               <v-tab>Graphics</v-tab>
               <v-tab>Raw Data</v-tab>
-              <v-tab-item>
+            </v-tabs>
+
+            <v-tabs-window v-model="tabs">
+              <v-tabs-window-item>
                 <v-card>
                   <v-card-title>
                     Question: {{ question ? question.text : "" }}
@@ -59,9 +62,9 @@
                     </TextTableQuestionViewScreen>
                   </v-card-text>
                 </v-card>
-              </v-tab-item>
-              <v-tab-item
-                ><v-data-table
+              </v-tabs-window-item>
+              <v-tabs-window-item>
+                <v-data-table
                   :items="rawDataItems"
                   :headers="headers"
                   v-if="questions.length > 0"
@@ -69,8 +72,9 @@
                   <template
                     v-slot:[`item.question${num}`]="{ item }"
                     v-for="num of questionsIds.length"
+                    :key="num"
                   >
-                    <td :key="num">
+                    <td>
                       {{
                         item.data.find((elem) => elem.questionId == num)
                           ? item.data.find((elem) => elem.questionId == num)
@@ -87,93 +91,84 @@
                       {{ item.emailAddress }}
                     </td>
                   </template>
-                </v-data-table></v-tab-item
-              >
-            </v-tabs></v-card-text
-          >
+                </v-data-table>
+              </v-tabs-window-item>
+            </v-tabs-window>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
   </v-container>
 </template>
-<script>
+<script setup>
 import BarChartQuestionViewScreen from "@/components/screens/questions/charts/BarChartQuestionViewScreen";
 import PieChartQuestionViewScreen from "@/components/screens/questions/charts/PieChartQuestionViewScreen";
 import TextTableQuestionViewScreen from "@/components/screens/questions/charts/TextTableQuestionViewScreen";
+import { inject, ref, reactive, computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
 
-export default {
-  components: {
-    BarChartQuestionViewScreen,
-    PieChartQuestionViewScreen,
-    TextTableQuestionViewScreen,
-  },
-  data: () => ({
-    headers: [],
-    poll: {},
-    tabs: 0,
-    questions: [{}],
-    questionsIds: [],
-    currentQuestion: 1,
-    rawDataItems: [],
-  }),
-  props: {},
+let headers = [];
+let poll = reactive({});
+let tabs = ref(0);
+let questions = [{}];
+let questionsIds = [];
+let currentQuestion = ref(1);
+let rawDataItems = [];
+const api = inject("api");
+const route = useRoute();
 
-  methods: {
-    load() {
-      this.$api
-        .get("/polls/" + this.$route.params.id)
+function load() {
+  api
+    .get("/polls/" + route.params.id)
+    .then(({ data }) => {
+      poll = data;
+      return api
+        .get("/polls/" + route.params.id + "/questions")
         .then(({ data }) => {
-          this.poll = data;
-          return this.$api
-            .get("/polls/" + this.$route.params.id + "/questions")
-            .then(({ data }) => {
-              this.questions = data;
-              this.headers = [{ text: "Identifier", value: "identifier" }];
-              this.questions.forEach((elem) => {
-                this.headers.push({
-                  text: elem.text,
-                  value: "question" + elem.id,
-                });
-              });
-              this.questionsIds = this.questions.map((elem) => elem.id);
-            })
-            .catch((error) => {
-              console.log(error);
+          questions = data;
+          headers = [{ text: "Identifier", value: "identifier" }];
+          questions.forEach((elem) => {
+            headers.push({
+              text: elem.text,
+              value: "question" + elem.id,
             });
+          });
+          questionsIds = questions.map((elem) => elem.id);
         })
         .catch((error) => {
           console.log(error);
         });
-    },
-    loadRawDataItems() {
-      this.$api
-        .get("/polls/" + this.poll.id + "/submissions/table")
-        .then(({ data }) => {
-          this.rawDataItems = data.rows;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+function loadRawDataItems() {
+  api
+    .get("/polls/" + poll.id + "/submissions/table")
+    .then(({ data }) => {
+      rawDataItems = data.rows;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+
+let question = computed(() => {
+  return questions[currentQuestion.value - 1];
+});
+
+onMounted(() => {
+  load();
+});
+
+watch(
+  tabs,
+  (newValue) => {
+    if (newValue == 1 && rawDataItems.length == 0) {
+      loadRawDataItems();
+    }
   },
-  computed: {
-    question() {
-      return this.questions[this.currentQuestion - 1];
-    },
-  },
-  async mounted() {
-    await this.load();
-  },
-  watch: {
-    tabs: {
-      immediate: true,
-      handler(v) {
-        console.log(v);
-        if (v == 1 && this.rawDataItems.length == 0) {
-          this.loadRawDataItems();
-        }
-      },
-    },
-  },
-};
+  { immediate: true }
+);
 </script>

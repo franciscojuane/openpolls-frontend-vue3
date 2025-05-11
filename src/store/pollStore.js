@@ -81,6 +81,8 @@ export default function createPollModule({ ApiService }) {
         }
         return savingPromise
           .then(({ data }) => {
+            pollId = data.id;
+
             state.commit("setPoll", data);
             let promises = [];
             let questions = state.getters.questions;
@@ -124,7 +126,7 @@ export default function createPollModule({ ApiService }) {
             }
             return Promise.all(promises)
               .then(() => {
-                state.dispatch("load", { pollId });
+                state.dispatch("loadPoll", { pollId });
               })
               .catch((error) => {
                 console.log(error);
