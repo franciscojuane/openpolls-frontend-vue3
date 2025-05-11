@@ -62,7 +62,7 @@
 <script setup>
 import PollEditScreen from "@/components/screens/PollEditScreen";
 import { ref, onMounted, inject, defineOptions, reactive } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { useStore } from "vuex";
 
 defineOptions({
@@ -143,4 +143,9 @@ function copyPollKeyToClipboard() {
       console.error("Error al copiar el texto: ", err);
     });
 }
+
+onBeforeRouteLeave((to, from, next) => {
+  store.commit("clearPoll");
+  next();
+});
 </script>

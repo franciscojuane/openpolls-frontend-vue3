@@ -24,11 +24,14 @@ export default function createPollModule({ ApiService }) {
 
       addQuestionAtIndex(state, { question, index }) {
         state.questions.splice(index, 0, question);
-        debugger;
         for (let i = index; i < state.questions.length; i++) {
           state.questions[i].rank = i + 1;
           state.questions[i].update = true;
         }
+      },
+      clearPoll(state) {
+        state.poll = {};
+        state.questions = [];
       },
     },
 
@@ -67,7 +70,16 @@ export default function createPollModule({ ApiService }) {
       },
       async savePoll(state) {
         let pollId = state.getters.poll.id;
-        return ApiService.patch("/polls/" + pollId, state.getters.poll)
+        let savingPromise;
+        if (pollId) {
+          savingPromise = ApiService.patch(
+            "/polls/" + pollId,
+            state.getters.poll
+          );
+        } else {
+          savingPromise = ApiService.post("/polls", state.getters.poll);
+        }
+        return savingPromise
           .then(({ data }) => {
             state.commit("setPoll", data);
             let promises = [];

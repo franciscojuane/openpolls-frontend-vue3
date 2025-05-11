@@ -4,8 +4,13 @@
       <v-col cols="10">
         <v-card class="elevation-12">
           <v-card-title>
-            <v-toolbar flat color="white">
-              <v-toolbar-title>Add new Poll</v-toolbar-title>
+            <v-toolbar
+              flat
+              color="white"
+              title="Add new poll"
+              density="compact"
+              class="text-start"
+            >
               <v-spacer></v-spacer>
               <v-btn @click="save" :disabled="!valid" class="secondary"
                 ><v-icon>mdi-content-save</v-icon></v-btn
@@ -29,80 +34,49 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import PollEditScreen from "@/components/screens/PollEditScreen";
-export default {
-  name: "PollAdd",
-  components: {
-    PollEditScreen,
-  },
+import { defineOptions, ref } from "vue";
+import { useStore } from "vuex";
 
-  data: () => ({
-    item: null,
-    valid: false,
-    error: null,
-  }),
-  mounted() {},
-  methods: {
-    save() {
-      this.$api
-        .post("/polls", this.item.poll)
-        .then(({ data }) => {
-          let pollId = data.id;
-          let promises = [];
-          this.item.poll = data;
-          let newQuestions = [];
-          for (let questionNumber in this.item.questions) {
-            let question = this.item.questions[questionNumber];
-            //question.rank = questionNumber;
-            if (question.id) {
-              promises.push(
-                this.$api
-                  .patch(
-                    "/polls/" + pollId + "/questions/" + question.id,
-                    question
-                  )
-                  .then(({ data }) => {
-                    console.log(data);
-                    newQuestions.push(data);
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                  })
-              );
-            } else {
-              promises.push(
-                this.$api
-                  .post("/polls/" + pollId + "/questions", question)
-                  .then(({ data }) => {
-                    console.log(data);
-                    newQuestions.push(data);
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                  })
-              );
-            }
-          }
-          Promise.all(promises)
-            .then(() => {
-              this.$router.push({
-                name: "pollEdit",
-                params: { id: pollId, new: true },
-              });
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        })
-        .catch((error) => {
-          this.error = error.response.data;
-          this.loading = false;
-          setTimeout(() => {
-            this.error = null;
-          }, 5000);
-        });
-    },
-  },
-};
+defineOptions({
+  name: "PollAdd",
+});
+
+let item = null;
+let valid = ref(false);
+let error = null;
+
+const showAlert = ref(false);
+const alertType = ref("warning");
+const alertMessage = ref("");
+let loading = ref(false);
+let store = useStore();
+
+function save() {
+  loading.value = true;
+  store
+    .dispatch("savePoll")
+    .then(() => {
+      loading.value = false;
+      showAlert.value = true;
+      alertType.value = "green";
+      alertMessage.value = "Changes saved successfully.";
+      setTimeout(() => {
+        showAlert.value = false;
+      }, 5000);
+    })
+    .catch((error) => {
+      console.log(error);
+      error = error.response.data;
+      loading.value = false;
+      showAlert.value = true;
+      alertType.value = "warning";
+      alertMessage.value = error.message;
+      console.log(error);
+      setTimeout(() => {
+        showAlert.value = false;
+      }, 5000);
+    });
+}
 </script>

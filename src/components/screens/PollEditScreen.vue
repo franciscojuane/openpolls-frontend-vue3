@@ -8,7 +8,7 @@
     <v-tabs-window v-model="tabs">
       <v-tabs-window-item>
         <v-card-text>
-          <v-form v-model="informationFormValid">
+          <v-form v-model="informationFormValid" ref="formRef">
             <v-row>
               <v-col cols="3"
                 ><v-text-field
@@ -51,10 +51,13 @@
                   item-value="value"
                   v-model="internalPoll.submissionLimitCriteria"
                   :items="submissionLimitCriteriaItems"
+                  :rules="[(v) => !!v || 'Required']"
                 ></v-select>
+                <v-btn @click="validate">asdasd</v-btn>
               </v-col>
-            </v-row> </v-form
-        ></v-card-text>
+            </v-row>
+          </v-form></v-card-text
+        >
       </v-tabs-window-item>
       <v-tabs-window-item>
         <v-container>
@@ -332,8 +335,16 @@ function deleteSelectedItem() {
 }
 
 onMounted(() => {
-  if (internalQuestions.length == 0) {
+  if (internalQuestions.value.length == 0) {
     addQuestion("multipleChoice");
   }
 });
+
+let formRef = ref(null);
+
+async function validate() {
+  let { valid, errors } = await formRef.value.validate();
+  console.log(valid); // false si algo falla
+  console.log(errors);
+}
 </script>
