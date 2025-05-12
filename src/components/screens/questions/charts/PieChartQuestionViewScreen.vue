@@ -10,38 +10,44 @@
   </v-container>
 </template>
 <script setup>
-import { defineProps, watch, ref, inject } from "vue";
+import { ref, defineProps, defineOptions, watch, inject } from "vue";
 
-let options = {
+defineOptions({
+  name: "PieChartQuestionViewScreen",
+});
+
+const api = inject("api");
+
+let options = ref({
   chart: {
     id: "vuechart-example",
   },
   xaxis: {
     categories: [],
   },
-};
-let series = [
+});
+let series = ref([
   {
     name: "series-1",
     data: [],
   },
-];
+]);
+let aggregatedData = ref([]);
+
 const props = defineProps({
   question: {
     type: Object,
     default: () => {},
   },
-  height: String,
-  width: String,
+  height: {
+    type: String,
+    default: "100",
+  },
+  width: { type: String, default: "100" },
 });
 
-let aggregatedData = ref([]);
-let loading = ref(false);
-
-const api = inject("api");
-
 function calculateOptions() {
-  options = {
+  options.value = {
     labels: props.question.options,
     chart: {
       id: "vuechart-example",
@@ -53,15 +59,15 @@ function calculateOptions() {
 }
 function calculateSeries() {
   if (props.question) {
-    series = aggregatedData.value.map((elem) => elem.count);
+    series.value = aggregatedData.value.map((elem) => elem.count);
   }
 }
+
 watch(
-  props.question,
+  () => props.question,
   (v) => {
-    loading.value = true;
     if (v) {
-      options.xaxis.categories = v.options;
+      options.value.xaxis.categories = v.options;
       api
         .get(
           "/polls/" + v.pollId + "/submissions/answerCountByQuestion/" + v.id
@@ -83,7 +89,6 @@ watch(
           aggregatedData.value = result;
           calculateOptions();
           calculateSeries();
-          loading.value = false;
         })
         .catch((error) => {
           console.log(error);

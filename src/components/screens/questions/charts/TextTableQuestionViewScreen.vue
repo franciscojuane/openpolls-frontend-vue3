@@ -2,7 +2,7 @@
   <v-container>
     <v-data-table
       :items="textTableItems"
-      :headers="[{ text: 'Answer', value: 'answerText' }]"
+      :headers="[{ title: 'Answer', value: 'answerText' }]"
       v-model:options="paginationOptions"
       :server-items-length="totalTextItems"
       :loading="loading"
@@ -13,73 +13,75 @@
     </v-data-table>
   </v-container>
 </template>
-<script>
-export default {
-  data: () => ({
-    headers: [],
-    loading: false,
-    aggregatedData: null,
-    textTableItems: [],
-    paginationOptions: {
-      itemsPerPage: 10,
-      page: 1,
-    },
-    totalTextItems: 0,
-  }),
-  props: {
-    question: {
-      type: Object,
-      default: () => {},
-    },
-    answers: {
-      type: Array,
-      default: () => [],
-    },
-  },
+<script setup>
+import { ref, reactive, defineProps, defineOptions, inject, watch } from "vue";
 
-  methods: {
-    loadTextQuestionData(v) {
-      if (!v) return;
-      this.loading = true;
-      this.$api
-        .get(
-          "/polls/" +
-            v.pollId +
-            "/submissions/answersByQuestion/" +
-            v.id +
-            "?size=" +
-            this.paginationOptions.itemsPerPage +
-            "&page=" +
-            (this.paginationOptions.page - 1)
-        )
-        .then(({ data }) => {
-          this.textTableItems = data.content;
-          this.totalTextItems = data.page.totalElements;
-          this.loading = false;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
-  },
+defineOptions({
+  name: "TextTableQuestionViewScreen",
+});
 
-  watch: {
-    question: {
-      immediate: true,
-      handler(v) {
-        this.loading = true;
+const api = inject("api");
 
-        if (v) {
-          this.loadTextQuestionData(v);
-        }
-      },
-    },
-    paginationOptions: {
-      deep: true,
-      handler() {
-        this.loadTextQuestionData(this.question);
-      },
-    },
+let loading = ref(false);
+
+let textTableItems = ref([]);
+let paginationOptions = reactive({
+  itemsPerPage: 10,
+  page: 1,
+});
+let totalTextItems = ref(0);
+
+const props = defineProps({
+  question: {
+    type: Object,
+    default: () => {},
   },
-};
+  answers: {
+    type: Array,
+    default: () => [],
+  },
+});
+
+function loadTextQuestionData(v) {
+  if (!v) return;
+  loading.value = true;
+  api
+    .get(
+      "/polls/" +
+        v.pollId +
+        "/submissions/answersByQuestion/" +
+        v.id +
+        "?size=" +
+        paginationOptions.itemsPerPage +
+        "&page=" +
+        (paginationOptions.page - 1)
+    )
+    .then(({ data }) => {
+      textTableItems.value = data.content;
+      totalTextItems.value = data.page.totalElements;
+      loading.value = false;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+watch(
+  () => props.question,
+  (v) => {
+    loading.value = true;
+
+    if (v) {
+      loadTextQuestionData(v);
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  paginationOptions,
+  () => {
+    loadTextQuestionData(props.question);
+  },
+  { deep: true }
+);
 </script>

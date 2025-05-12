@@ -107,10 +107,10 @@ import TextTableQuestionViewScreen from "@/components/screens/questions/charts/T
 import { inject, ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 
-let headers = [];
+let headers = ref([]);
 let poll = reactive({});
 let tabs = ref(0);
-let questions = [{}];
+let questions = ref([{}]);
 let questionsIds = [];
 let currentQuestion = ref(1);
 let rawDataItems = [];
@@ -125,15 +125,15 @@ function load() {
       return api
         .get("/polls/" + route.params.id + "/questions")
         .then(({ data }) => {
-          questions = data;
-          headers = [{ text: "Identifier", value: "identifier" }];
-          questions.forEach((elem) => {
-            headers.push({
-              text: elem.text,
+          questions.value = data;
+          headers.value = [{ title: "Identifier", value: "identifier" }];
+          questions.value.forEach((elem) => {
+            headers.value.push({
+              title: elem.text,
               value: "question" + elem.id,
             });
           });
-          questionsIds = questions.map((elem) => elem.id);
+          questionsIds = questions.value.map((elem) => elem.id);
         })
         .catch((error) => {
           console.log(error);
@@ -155,7 +155,7 @@ function loadRawDataItems() {
 }
 
 let question = computed(() => {
-  return questions[currentQuestion.value - 1];
+  return questions.value[currentQuestion.value - 1];
 });
 
 onMounted(() => {

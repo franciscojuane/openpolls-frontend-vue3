@@ -13,8 +13,9 @@ const app = createApp(App);
 app.use(vuetify);
 app.use(router);
 app.use(store);
-
 app.use(VueApexCharts);
+
+//app.component("ApexChart", VueApexCharts);
 
 app.provide("auth", AuthService);
 app.provide("api", ApiService);
