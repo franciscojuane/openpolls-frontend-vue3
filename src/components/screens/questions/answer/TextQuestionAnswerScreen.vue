@@ -1,6 +1,6 @@
 <template>
   <v-card v-if="question">
-    <v-card-title>{{ question.text }}</v-card-title>
+    <v-card-title class="text-left">{{ question.text }}</v-card-title>
     <v-card-subtitle>{{ question.subtext }}</v-card-subtitle>
     <v-card-text>
       <v-container>
@@ -26,7 +26,7 @@
                   ' and ' +
                   question.maxLength
                 "
-                @change="emitValue($event)"
+                @change="emitValue($event.target.value)"
               >
               </v-textarea>
             </v-form>
@@ -36,34 +36,30 @@
     </v-card-text>
   </v-card>
 </template>
-<script>
-export default {
-  data: () => ({
-    textValue: null,
-    valid: false,
-  }),
-  props: {
-    question: Object,
-  },
-  watch: {
-    question: {
-      handler() {
-        this.textValue = null;
-      },
-    },
-    valid: {
-      handler(v) {
-        this.$emit("valid", v);
-      },
-    },
-  },
-  methods: {
-    emitValue(value) {
-      this.$emit("answer", {
-        answer: value,
-        questionId: this.question.id,
-      });
-    },
-  },
-};
+<script setup>
+import { defineProps, ref, watch, defineEmits } from "vue";
+
+let textValue = ref(null);
+let valid = ref(false);
+
+const emit = defineEmits(["valid", "answer"]);
+
+const props = defineProps({
+  question: { type: Object, default: () => {} },
+});
+
+watch(props.question, () => {
+  textValue.value = null;
+});
+
+watch(valid, (v) => {
+  emit("valid", v);
+});
+
+function emitValue(value) {
+  emit("answer", {
+    answer: value,
+    questionId: props.question.id,
+  });
+}
 </script>

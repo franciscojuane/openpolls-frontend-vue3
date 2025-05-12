@@ -1,6 +1,6 @@
 <template>
   <v-card v-if="question">
-    <v-card-title>{{ question.text }}</v-card-title>
+    <v-card-title class="text-left">{{ question.text }}</v-card-title>
     <v-card-subtitle>{{ question.subtext }}</v-card-subtitle>
     <v-card-text>
       <v-container>
@@ -14,7 +14,7 @@
               :tick-labels="ticksLabels"
               ticks="always"
               thumb-label="always"
-              @change="emitValue($event)"
+              @update:modelValue="emitValue($event)"
             ></v-slider>
           </v-col>
         </v-row>
@@ -22,48 +22,39 @@
     </v-card-text>
   </v-card>
 </template>
-<script>
-export default {
-  data: () => ({
-    numericValue: null,
-  }),
-  props: {
-    question: Object,
+<script setup>
+import { defineProps, watch, defineEmits, computed, ref } from "vue";
+let numericValue = ref(1);
+
+const emit = defineEmits("answer", "valid");
+const props = defineProps({
+  question: { type: Object, default: () => {} },
+});
+
+watch(
+  props.question,
+  (v) => {
+    numericValue.value = v.minValue;
+    emitValue(numericValue);
+    emit("valid", true);
   },
-  watch: {
-    formattedAnswer: {
-      deep: true,
-      handler(v) {
-        this.$emit("answer", v);
-      },
-    },
-    question: {
-      immediate: true,
-      handler(v) {
-        this.numericValue = v.minValue;
-        this.emitValue(this.numericValue);
-        this.$emit("valid", true);
-      },
-    },
-  },
-  computed: {
-    ticksLabels() {
-      let result = [];
-      for (let i = this.question.minValue; i <= this.question.maxValue; i++) {
-        result.push(i);
-      }
-      return result;
-    },
-  },
-  methods: {
-    emitValue(value) {
-      this.$emit("answer", {
-        answer: value,
-        questionId: this.question.id,
-      });
-    },
-  },
-};
+  { immediate: true }
+);
+
+let ticksLabels = computed(() => {
+  let result = [];
+  for (let i = props.question.minValue; i <= props.question.maxValue; i++) {
+    result.push(i);
+  }
+  return result;
+});
+
+function emitValue(value) {
+  emit("answer", {
+    answer: value,
+    questionId: props.question.id,
+  });
+}
 </script>
 <style>
 .v-slider__tick-label {

@@ -25,7 +25,9 @@
             <v-col cols="8">
               <v-container v-if="!successScreen">
                 <v-card>
-                  <v-card-title> Enter your email address </v-card-title>
+                  <v-card-title class="text-left">
+                    Enter your email address
+                  </v-card-title>
                   <v-card-text>
                     <v-row>
                       <v-col cols="5">
@@ -44,6 +46,7 @@
               </v-container>
             </v-col>
           </v-row>
+
           <v-row justify="center">
             <v-col cols="8">
               <v-container v-if="!successScreen">
@@ -57,28 +60,28 @@
                       v-if="question.questionType.name == 'MULTIPLE_CHOICE'"
                       :question="question"
                       @answer="answers[question.id] = $event"
-                      @valid="$set(valid, question.id, $event)"
+                      @valid="validArray[question.id] = $event"
                     ></MultipleChoiceQuestionAnswerScreen>
 
                     <NumericQuestionAnswerScreen
                       v-if="question.questionType.name == 'NUMERIC'"
                       :question="question"
                       @answer="answers[question.id] = $event"
-                      @valid="$set(valid, question.id, $event)"
+                      @valid="validArray[question.id] = $event"
                     ></NumericQuestionAnswerScreen>
 
                     <ScaleQuestionAnswerScreen
                       v-if="question.questionType.name == 'SCALE'"
                       :question="question"
                       @answer="answers[question.id] = $event"
-                      @valid="$set(valid, question.id, $event)"
+                      @valid="validArray[question.id] = $event"
                     ></ScaleQuestionAnswerScreen>
 
                     <TextQuestionAnswerScreen
                       v-if="question.questionType.name == 'TEXT'"
                       :question="question"
                       @answer="answers[question.id] = $event"
-                      @valid="$set(valid, question.id, $event)"
+                      @valid="validArray[question.id] = $event"
                     ></TextQuestionAnswerScreen>
                   </v-col>
                 </v-row>
@@ -86,9 +89,9 @@
                   <v-container>
                     <v-btn
                       class="primary"
-                      @click="submit"
                       :loading="loading"
                       :disabled="!allQuestionsAndEmailAreValid"
+                      @click="submit"
                       >Submit</v-btn
                     ></v-container
                   >
@@ -103,115 +106,103 @@
     <v-row> </v-row>
   </v-container>
 </template>
-<script>
+<script setup>
 import MultipleChoiceQuestionAnswerScreen from "@/components/screens/questions/answer/MultipleChoiceQuestionAnswerScreen";
 import NumericQuestionAnswerScreen from "@/components/screens/questions/answer/NumericQuestionAnswerScreen";
 import ScaleQuestionAnswerScreen from "@/components/screens/questions/answer/ScaleQuestionAnswerScreen";
 import TextQuestionAnswerScreen from "@/components/screens/questions/answer/TextQuestionAnswerScreen";
-export default {
-  components: {
-    MultipleChoiceQuestionAnswerScreen,
-    NumericQuestionAnswerScreen,
-    ScaleQuestionAnswerScreen,
-    TextQuestionAnswerScreen,
-  },
-  data: () => ({
-    poll: {},
-    tabs: 0,
-    questions: [],
-    emailAddress: null,
-    answers: {},
-    loading: false,
-    successScreen: false,
-    valid: {},
-    error: null,
-  }),
-  props: {},
 
-  methods: {
-    load() {
-      this.$api
-        .get("/public/polls/" + this.$route.params.pollKey)
+import { computed, onMounted, ref, reactive, inject } from "vue";
+import { useRoute } from "vue-router";
+
+let poll = reactive({});
+let questions = ref([]);
+let emailAddress = ref(null);
+let answers = reactive({});
+let loading = ref(false);
+let successScreen = ref(false);
+let validArray = reactive({});
+let error = null;
+
+const api = inject("api");
+const route = useRoute();
+
+function load() {
+  api
+    .get("/public/polls/" + route.params.pollKey)
+    .then(({ data }) => {
+      poll = data;
+      return api
+        .get("/public/polls/" + route.params.pollKey + "/questions")
         .then(({ data }) => {
-          this.poll = data;
-          return this.$api
-            .get("/public/polls/" + this.$route.params.pollKey + "/questions")
-            .then(({ data }) => {
-              this.questions = data;
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+          questions.value = data;
         })
         .catch((error) => {
           console.log(error);
-          this.error = error.response.data;
         });
-    },
+    })
+    .catch((error) => {
+      console.log(error);
+      error = error.response.data;
+    });
+}
 
-    submit() {
-      this.loading = true;
-      let answerPayload = [];
-      for (let answerKey of Object.keys(this.answers)) {
-        let answer = this.answers[answerKey];
-        if (Array.isArray(answer)) {
-          for (let innerAnswer of answer) {
-            answerPayload.push(innerAnswer);
-          }
-        } else {
-          answerPayload.push(answer);
-        }
+function submit() {
+  loading = true;
+  let answerPayload = [];
+  for (let answerKey of Object.keys(answers)) {
+    let answer = answers[answerKey];
+    if (Array.isArray(answer)) {
+      for (let innerAnswer of answer) {
+        answerPayload.push(innerAnswer);
       }
-      let payload = {
-        submissionAnswers: answerPayload,
-        emailAddress: this.emailAddress,
-      };
+    } else {
+      answerPayload.push(answer);
+    }
+  }
+  let payload = {
+    submissionAnswers: answerPayload,
+    emailAddress: emailAddress.value,
+  };
 
-      this.$api
-        .post(
-          "/public/polls/" + this.$route.params.pollKey + "/submissions",
-          payload
-        )
-        .then(() => {
-          window.scroll({
-            top: 0,
-            left: 0,
-            behavior: "smooth",
-          });
-          setTimeout(() => {
-            this.successScreen = true;
-            this.loading = false;
-          }, 1000);
-        })
-        .catch((error) => {
-          window.scroll({
-            top: 0,
-            left: 0,
-            behavior: "smooth",
-          });
-          this.error = error.response.data;
-          this.loading = false;
-          setTimeout(() => {
-            this.error = null;
-          }, 5000);
-        });
-    },
-  },
-  computed: {
-    allQuestionsAndEmailAreValid() {
-      let valid = true;
-      for (let question of this.questions) {
-        valid &= this.valid[question.id];
-      }
-      valid &= this.emailAddress != null;
+  api
+    .post("/public/polls/" + route.params.pollKey + "/submissions", payload)
+    .then(() => {
+      window.scroll({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+      setTimeout(() => {
+        successScreen.value = true;
+        loading = false;
+      }, 1000);
+    })
+    .catch((err) => {
+      window.scroll({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+      error = err.response.data;
+      loading = false;
+      setTimeout(() => {
+        error = null;
+      }, 5000);
+    });
+}
 
-      let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      valid &= emailRegex.test(this.emailAddress);
-      return valid;
-    },
-  },
-  async mounted() {
-    await this.load();
-  },
-};
+let allQuestionsAndEmailAreValid = computed(() => {
+  let valid = true;
+  for (let question of questions.value) {
+    valid &= validArray[question.id];
+  }
+  valid &= emailAddress.value != null;
+  let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  valid &= emailRegex.test(emailAddress.value);
+  return valid;
+});
+onMounted(() => {
+  load();
+});
 </script>

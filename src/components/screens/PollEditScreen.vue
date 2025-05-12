@@ -70,6 +70,9 @@
                   <v-col cols="6"
                     ><v-card class="elevation-3 mt-2 pl-2 pr-2">
                       <v-card-title>Question # {{ index + 1 }}</v-card-title>
+                      <v-card-subtitle>{{
+                        nameFromType(object.questionType.name)
+                      }}</v-card-subtitle>
                       <v-card-text>
                         <MultipleChoiceQuestionEditScreen
                           v-if="
@@ -330,6 +333,23 @@ function showDeleteDialog(index) {
 }
 function deleteSelectedItem() {
   effectiveQuestions.value[selectedIndexForDeletion].delete = true;
+}
+
+function nameFromType(type) {
+  switch (type) {
+    case "MULTIPLE_CHOICE":
+      return "Multiple Choice";
+
+    case "NUMERIC":
+      return "Numeric";
+
+    case "SCALE":
+      return "Scale";
+    case "TEXT":
+      return "Text";
+    default:
+      return "Unknown";
+  }
 }
 
 onMounted(() => {
