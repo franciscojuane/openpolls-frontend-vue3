@@ -1,94 +1,95 @@
 <template>
   <v-container>
-    <ApexChart
+    <apexchart
       :height="height"
       :width="width"
       type="bar"
       :series="series"
       :options="options"
-    ></ApexChart>
+    ></apexchart>
   </v-container>
 </template>
-<script>
-export default {
-  data: () => ({
-    options: {
-      chart: {
-        id: "vuechart-example",
-      },
-      xaxis: {
-        categories: [],
-      },
+<script setup>
+import { defineProps, defineOptions, watch, ref, inject } from "vue";
+
+const api = inject("api");
+
+defineOptions({
+  name: "BarChartQuestionViewScreen",
+});
+
+let options = ref({
+  chart: {
+    id: "vuechart-example",
+  },
+  xaxis: {
+    categories: [],
+  },
+});
+let series = ref([
+  {
+    name: "series-1",
+    data: [],
+  },
+]);
+let aggregatedData = ref([]);
+
+const props = defineProps({
+  question: {
+    type: Object,
+    default: () => {},
+  },
+  answers: {
+    type: Array,
+    default: () => [],
+  },
+  height: {
+    type: String,
+    default: "100",
+  },
+  width: { type: String, default: "100" },
+});
+
+function calculateOptions() {
+  options.value = {
+    chart: {
+      id: "vuechart-example",
     },
-    series: [
+    xaxis: {
+      categories: aggregatedData.value.map((elem) => elem.answer),
+    },
+  };
+}
+function calculateSeries() {
+  if (props.question) {
+    series.value = [
       {
         name: "series-1",
-        data: [],
+        data: aggregatedData.value.map((elem) => elem.count),
       },
-    ],
-  }),
-  props: {
-    question: {
-      type: Object,
-      default: () => {},
-    },
-    answers: {
-      type: Array,
-      default: () => [],
-    },
-    height: String,
-    width: String,
-  },
+    ];
+  }
+}
 
-  methods: {
-    calculateOptions() {
-      this.options = {
-        chart: {
-          id: "vuechart-example",
-        },
-        xaxis: {
-          categories: this.aggregatedData.map((elem) => elem.answer),
-        },
-      };
-    },
-    calculateSeries() {
-      if (this.question) {
-        this.series = [
-          {
-            name: "series-1",
-            data: this.aggregatedData.map((elem) => elem.count),
-          },
-        ];
-      }
-    },
+watch(
+  () => props.question,
+  (v) => {
+    if (v) {
+      options.value.xaxis.categories = v.options;
+      api
+        .get(
+          "/polls/" + v.pollId + "/submissions/answerCountByQuestion/" + v.id
+        )
+        .then(({ data }) => {
+          aggregatedData.value = data.content;
+          calculateOptions();
+          calculateSeries();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
   },
-
-  watch: {
-    question: {
-      immediate: true,
-      handler(v) {
-        this.loading = true;
-        if (v) {
-          this.options.xaxis.categories = v.options;
-          this.$api
-            .get(
-              "/polls/" +
-                v.pollId +
-                "/submissions/answerCountByQuestion/" +
-                v.id
-            )
-            .then(({ data }) => {
-              this.aggregatedData = data.content;
-              this.calculateOptions();
-              this.calculateSeries();
-              this.loading = false;
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      },
-    },
-  },
-};
+  { immediate: true }
+);
 </script>

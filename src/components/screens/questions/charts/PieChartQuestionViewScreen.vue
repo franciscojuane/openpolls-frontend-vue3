@@ -1,99 +1,100 @@
 <template>
   <v-container>
-    <ApexChart
+    <apexchart
       :height="height"
       :width="width"
       type="pie"
       :series="series"
       :options="options"
-    ></ApexChart>
+    ></apexchart>
   </v-container>
 </template>
-<script>
-export default {
-  data: () => ({
-    options: {
-      chart: {
-        id: "vuechart-example",
-      },
-      xaxis: {
-        categories: [],
-      },
-    },
-    series: [
-      {
-        name: "series-1",
-        data: [],
-      },
-    ],
-  }),
-  props: {
-    question: {
-      type: Object,
-      default: () => {},
-    },
-    height: String,
-    width: String,
-  },
+<script setup>
+import { ref, defineProps, defineOptions, watch, inject } from "vue";
 
-  methods: {
-    calculateOptions() {
-      this.options = {
-        labels: this.question.options,
-        chart: {
-          id: "vuechart-example",
-        },
-        xaxis: {
-          categories: [],
-        },
-      };
-    },
-    calculateSeries() {
-      if (this.question) {
-        this.series = this.aggregatedData.map((elem) => elem.count);
-      }
-    },
-  },
+defineOptions({
+  name: "PieChartQuestionViewScreen",
+});
 
-  watch: {
-    question: {
-      immediate: true,
-      handler(v) {
-        this.loading = true;
-        if (v) {
-          this.options.xaxis.categories = v.options;
-          this.$api
-            .get(
-              "/polls/" +
-                v.pollId +
-                "/submissions/answerCountByQuestion/" +
-                v.id
-            )
-            .then(({ data }) => {
-              let options = this.question.options;
-              let result = [];
-              for (let option of options) {
-                let elemFromData = data.content.find(
-                  (elem) => elem.answer == option
-                );
-                if (elemFromData) {
-                  result.push(elemFromData);
-                } else {
-                  result.push({ answer: option, count: 0 });
-                }
-              }
+const api = inject("api");
 
-              this.aggregatedData = result;
-              this.calculateOptions();
-              this.calculateSeries();
-              this.loading = false;
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      },
-    },
+let options = ref({
+  chart: {
+    id: "vuechart-example",
   },
-};
+  xaxis: {
+    categories: [],
+  },
+});
+let series = ref([
+  {
+    name: "series-1",
+    data: [],
+  },
+]);
+let aggregatedData = ref([]);
+
+const props = defineProps({
+  question: {
+    type: Object,
+    default: () => {},
+  },
+  height: {
+    type: String,
+    default: "100",
+  },
+  width: { type: String, default: "100" },
+});
+
+function calculateOptions() {
+  options.value = {
+    labels: props.question.options,
+    chart: {
+      id: "vuechart-example",
+    },
+    xaxis: {
+      categories: [],
+    },
+  };
+}
+function calculateSeries() {
+  if (props.question) {
+    series.value = aggregatedData.value.map((elem) => elem.count);
+  }
+}
+
+watch(
+  () => props.question,
+  (v) => {
+    if (v) {
+      options.value.xaxis.categories = v.options;
+      api
+        .get(
+          "/polls/" + v.pollId + "/submissions/answerCountByQuestion/" + v.id
+        )
+        .then(({ data }) => {
+          let options = props.question.options;
+          let result = [];
+          for (let option of options) {
+            let elemFromData = data.content.find(
+              (elem) => elem.answer == option
+            );
+            if (elemFromData) {
+              result.push(elemFromData);
+            } else {
+              result.push({ answer: option, count: 0 });
+            }
+          }
+
+          aggregatedData.value = result;
+          calculateOptions();
+          calculateSeries();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  },
+  { immediate: true }
+);
 </script>
