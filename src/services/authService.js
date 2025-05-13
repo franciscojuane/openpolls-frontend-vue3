@@ -8,7 +8,7 @@ const AuthService = {
       password: password,
     }).then(({ data }) => {
       window.localStorage.setItem("token", data.token);
-      ApiService.get("/users/getCurrentUser").then(({ data }) => {
+      return ApiService.get("/users/getCurrentUser").then(({ data }) => {
         store.commit("setCurrentUser", { user: data });
       });
     });
