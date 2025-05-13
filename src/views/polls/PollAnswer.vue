@@ -122,7 +122,7 @@ let answers = reactive({});
 let loading = ref(false);
 let successScreen = ref(false);
 let validArray = reactive({});
-let error = null;
+let error = ref(null);
 
 const api = inject("api");
 const route = useRoute();
@@ -141,9 +141,9 @@ function load() {
           console.log(error);
         });
     })
-    .catch((error) => {
-      console.log(error);
-      error = error.response.data;
+    .catch((err) => {
+      console.log(err);
+      error.value = err.response.data;
     });
 }
 
@@ -184,10 +184,10 @@ function submit() {
         left: 0,
         behavior: "smooth",
       });
-      error = err.response.data;
+      error.value = err.response.data;
       loading = false;
       setTimeout(() => {
-        error = null;
+        error.value = null;
       }, 5000);
     });
 }
