@@ -12,14 +12,20 @@
               class="text-start"
             >
               <v-spacer></v-spacer>
-              <v-btn @click="save" :disabled="!valid" class="secondary"
+              <v-btn
+                v-if="showSaveIcon"
+                @click="save"
+                :disabled="!valid"
+                class="secondary"
                 ><v-icon>mdi-content-save</v-icon></v-btn
               >
             </v-toolbar>
           </v-card-title>
-          <v-row justify="center" v-if="error">
-            <v-col cols="11"
-              ><v-alert type="warning">{{ error.message }}</v-alert></v-col
+          <v-row justify="center">
+            <v-col cols="11">
+              <v-alert :type="alertType" v-if="showAlert">{{
+                alertMessage
+              }}</v-alert></v-col
             >
           </v-row>
           <v-card-text>
@@ -38,6 +44,7 @@
 import PollEditScreen from "@/components/screens/PollEditScreen";
 import { defineOptions, ref } from "vue";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 
 defineOptions({
   name: "PollAdd",
@@ -45,35 +52,38 @@ defineOptions({
 
 let item = null;
 let valid = ref(false);
-let error = null;
+let showSaveIcon = ref(true);
 
 const showAlert = ref(false);
 const alertType = ref("warning");
 const alertMessage = ref("");
 let loading = ref(false);
-let store = useStore();
+const store = useStore();
+const router = useRouter();
 
 function save() {
   loading.value = true;
   store
     .dispatch("savePoll")
     .then(() => {
+      showSaveIcon.value = false;
       loading.value = false;
       showAlert.value = true;
       alertType.value = "green";
       alertMessage.value = "Changes saved successfully.";
+
       setTimeout(() => {
         showAlert.value = false;
-      }, 5000);
+        let newPoll = store.getters.poll;
+        router.push({ name: "pollEdit", params: { id: newPoll.id } });
+      }, 3000);
     })
-    .catch((error) => {
-      console.log(error);
-      error = error?.response?.data;
+    .catch((err) => {
+      console.log(err);
       loading.value = false;
       showAlert.value = true;
       alertType.value = "warning";
-      alertMessage.value = error?.message;
-      console.log(error);
+      alertMessage.value = err?.message;
       setTimeout(() => {
         showAlert.value = false;
       }, 5000);

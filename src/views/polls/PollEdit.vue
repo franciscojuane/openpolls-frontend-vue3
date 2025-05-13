@@ -45,7 +45,7 @@
           </v-card-title>
 
           <v-card-text>
-            <v-alert :type="alertType" v-model="showAlert">{{
+            <v-alert :type="alertType" v-if="showAlert">{{
               alertMessage
             }}</v-alert>
             <PollEditScreen
@@ -115,7 +115,6 @@ function save() {
     })
     .catch((error) => {
       console.log(error);
-      error = error.response.data;
       loading.value = false;
       showAlert.value = true;
       alertType.value = "warning";
