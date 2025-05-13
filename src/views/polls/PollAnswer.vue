@@ -135,7 +135,7 @@ function load() {
       return api
         .get("/public/polls/" + route.params.pollKey + "/questions")
         .then(({ data }) => {
-          questions.value = data;
+          questions.value = data.sort((a, b) => a.rank - b.rank);
         })
         .catch((error) => {
           console.log(error);

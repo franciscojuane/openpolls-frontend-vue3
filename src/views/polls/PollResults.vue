@@ -18,7 +18,7 @@
 
             <v-tabs-window v-model="tabs">
               <v-tabs-window-item>
-                <v-card>
+                <v-card :key="question.id">
                   <v-card-title>
                     Question: {{ question ? question.text : "" }}
                   </v-card-title>
@@ -125,7 +125,7 @@ function load() {
       return api
         .get("/polls/" + route.params.id + "/questions")
         .then(({ data }) => {
-          questions.value = data;
+          questions.value = data.sort((a, b) => a.rank - b.rank);
           headers.value = [{ title: "Identifier", value: "identifier" }];
           questions.value.forEach((elem) => {
             headers.value.push({
