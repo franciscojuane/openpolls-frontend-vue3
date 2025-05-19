@@ -1,6 +1,7 @@
 <template>
   <v-container>
     <apexchart
+      v-if="series && series[0].data && series[0].data.length > 0"
       :height="height"
       :width="width"
       type="bar"
@@ -56,7 +57,7 @@ function calculateOptions() {
       id: "vuechart-example",
     },
     xaxis: {
-      categories: aggregatedData.value.map((elem) => elem.answer),
+      categories: aggregatedData.value.map((elem) => "" + elem.answer),
     },
   };
 }
@@ -69,6 +70,7 @@ function calculateSeries() {
       },
     ];
   }
+  console.log(series);
 }
 
 watch(
