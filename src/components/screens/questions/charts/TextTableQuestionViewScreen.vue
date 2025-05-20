@@ -8,7 +8,7 @@
       :loading="loading"
     >
       <template v-slot:[`item.answerText`]="{ item }">
-        {{ item }}
+        <div style="text-align: start">{{ item }}</div>
       </template>
     </v-data-table>
   </v-container>
