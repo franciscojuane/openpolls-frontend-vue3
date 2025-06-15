@@ -27,6 +27,7 @@ const AuthService = {
   },
   hasPermission(permission) {
     let user = store.getters.currentUser;
+    if (!user) return false;
     for (let role of user.roles) {
       for (let rolePermission of role.permissions) {
         if (rolePermission.name == permission) {
