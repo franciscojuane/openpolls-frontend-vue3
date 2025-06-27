@@ -4,6 +4,8 @@
 
 The OpenPolls Frontend is a user-friendly web application built with Vue 3, Vuetify, and Vuex, designed to provide an intuitive interface for creating, managing, and responding to polls. It seamlessly integrates with the OpenPolls Backend to deliver a complete polling system.
 
+This project is designed to work with the [OpenPolls Backend (Monolith)](https://github.com/franciscojuane/openpolls-backend) and [OpenPolls Backend (Microservices)](https://github.com/franciscojuane/openpolls-backend-microservices).
+
 ## Key Features
 
 - Poll Creation and Management: Easily create, edit, and delete polls with a clean and responsive UI.
